@@ -13,7 +13,7 @@ public class ConfigReader {
 
     final static Logger logger = new Logger(MethodHandles.lookup().lookupClass());
 
-    private static final String ENVIRONMENT_VARIABLE = "cats.config";
+    private static final String ENVIRONMENT_VARIABLE = "catspaw.config";
 
     private static Properties properties = null;
     private static ArrayList<String> paths = new ArrayList<>();
