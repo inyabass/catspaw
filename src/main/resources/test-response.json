@@ -2,10 +2,8 @@
   "guid": "GUID",
   "timeResponded": "timestamp",
   "elapsedSeconds": 0,
-  "resultsKey": "key-to-datastore-for-json",
   "status": "ok|fail",
   "request": {
-    "guid": "GUID",
     "requestor": "xxx",
     "timeRequested": "timestamp",
     "tagExpression": "",

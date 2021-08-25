@@ -19,10 +19,15 @@ public class KafkaWriter {
     public static void main(String[] args) throws Throwable {
         KafkaWriter kafkaWriter = new KafkaWriter();
         kafkaWriter.write(KafkaConfig.TEST_REQUEST_TOPIC, "thekey", "thevalue");
+        kafkaWriter.write(KafkaConfig.TEST_RESPONSE_TOPIC, "thekey2", "thevalue2");
         int i = 0;
     }
 
     public KafkaWriter() {
+        this.kafkaProducer = this.createClient();
+    }
+
+    private KafkaProducer<String, String> createClient() {
         Properties properties = new Properties();
         try {
             properties.put(KafkaConfig.BOOTSTRAP_SERVERS, ConfigReader.get(KafkaConfig.BOOTSTRAP_SERVERS));
@@ -32,15 +37,17 @@ public class KafkaWriter {
             properties.put(KafkaConfig.RETRIES, ConfigReader.get(KafkaConfig.RETRIES));
             properties.put(KafkaConfig.CLIENT_ID, ConfigReader.get(KafkaConfig.CLIENT_ID));
         } catch (Throwable t) {
-            Assert.fail("Unable to Configure Client: " + t.getMessage());
+            Assert.fail("Unable to Get Producer Configuration: " + t.getMessage());
         }
-        this.kafkaProducer = new KafkaProducer<String, String>(properties);
-        logger.info("Kafka Producer Client created");
+        KafkaProducer<String, String> kafkaProducer = new KafkaProducer<String, String>(properties);
+        logger.info("Kafka Producer Created");
+        return kafkaProducer;
     }
 
     public void write(String topic, String key, String value) throws Throwable {
         ProducerRecord<String, String> producerRecord = new ProducerRecord<>(topic, key, value);
         RecordMetadata recordMetadata = this.kafkaProducer.send(producerRecord).get();
+        this.kafkaProducer.flush();
         logger.info("Record posted to " + topic + " offset " + recordMetadata.offset());
     }
 }
