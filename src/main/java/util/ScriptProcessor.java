@@ -1,5 +1,6 @@
 package util;
 
+import config.ConfigReader;
 import logging.Logger;
 import org.junit.Assert;
 
@@ -27,10 +28,9 @@ public class ScriptProcessor {
         ScriptProcessor scriptProcessor = new ScriptProcessor();
         scriptProcessor.setWorkingDirectory(System.getProperty("java.io.tmpdir") + "cats" + fs + System.currentTimeMillis());
         scriptProcessor.addLine("pwd");
-        scriptProcessor.addLine("git clone https://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@github.com/inyabass/catspaw.git");
+        scriptProcessor.addLine("git clone " + ConfigReader.get("git.repo.url"));
         scriptProcessor.addLine("cd catspaw");
         scriptProcessor.addLine("git checkout develop");
-        scriptProcessor.addLine("env");
         scriptProcessor.addLine("mvn compile");
         scriptProcessor.run();
     }
@@ -76,7 +76,7 @@ public class ScriptProcessor {
         int i = 0;
         for(String string: this.lines) {
             i++;
-            logger.info(string);
+            logger.info("Command -> " + string);
             if(i < this.lines.size()) {
                 fileWriter.write(string + "\n");
             } else {

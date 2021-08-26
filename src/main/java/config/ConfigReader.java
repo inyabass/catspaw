@@ -3,9 +3,12 @@ package config;
 import logging.Logger;
 import org.junit.Assert;
 
+import java.beans.Encoder;
 import java.io.InputStream;
 import java.lang.invoke.MethodHandles;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Properties;
 import java.util.Set;
 
@@ -17,6 +20,13 @@ public class ConfigReader {
 
     private static Properties properties = null;
     private static ArrayList<String> paths = new ArrayList<>();
+
+    public static void main(String[] args) throws Throwable {
+        String encoded = encode("abc123");
+        System.out.println(encoded);
+        String decoded = decode(encoded);
+        System.out.println(decoded);
+    }
 
     public static void ConfigReader() throws Throwable {
         if(properties != null) {
@@ -74,7 +84,12 @@ public class ConfigReader {
     public static String get(String property) throws Throwable {
         ConfigReader.checkAndLoadProperties();
         if(ConfigReader.exists(property)) {
-            return (String) ConfigReader.properties.get(property);
+            String value = (String) ConfigReader.properties.get(property);
+            if(value.startsWith("$e:")) {
+                return decode(value.substring(3));
+            } else {
+                return value;
+            }
         }
         Assert.fail("Property '" + property + "' does not exist in Config");
         return null;
@@ -87,6 +102,10 @@ public class ConfigReader {
         } else {
             ConfigReader.properties.put(property, value);
         }
+    }
+
+    public static void setEncoded(String property, String value) throws Throwable {
+        set(property, "$e:" + encode(value));
     }
 
     public static void mergeInWithOverride(Properties mergeProperties) throws Throwable {
@@ -103,5 +122,15 @@ public class ConfigReader {
         if(ConfigReader.properties == null) {
             ConfigReader.ConfigReader();
         }
+    }
+
+    private static String encode(String decoded) {
+        Base64.Encoder encoder = Base64.getEncoder();
+        return new String(encoder.encode(decoded.getBytes()), StandardCharsets.UTF_8);
+    }
+
+    private static String decode(String encoded) {
+        Base64.Decoder decoder = Base64.getDecoder();
+        return new String(decoder.decode(encoded.getBytes()), StandardCharsets.UTF_8);
     }
 }
