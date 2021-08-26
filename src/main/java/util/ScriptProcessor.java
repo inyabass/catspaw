@@ -87,7 +87,6 @@ public class ScriptProcessor {
         ProcessBuilder processBuilder = new ProcessBuilder();
         processBuilder.redirectErrorStream(true);
         Map<String, String> environment = processBuilder.environment();
-        int z = 0;
         try {
             if(dirPath!=null) {
                 processBuilder.directory(dirPath.toFile());
@@ -97,7 +96,7 @@ public class ScriptProcessor {
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String line;
             while ((line = reader.readLine()) != null) {
-                System.out.println(line);
+                logger.info(line);
             }
         } catch (Throwable t) {
             Assert.fail("Unable to Run bash");
