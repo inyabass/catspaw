@@ -18,8 +18,7 @@ public class KafkaWriter {
 
     public static void main(String[] args) throws Throwable {
         KafkaWriter kafkaWriter = new KafkaWriter();
-        kafkaWriter.write(KafkaConfig.TEST_REQUEST_TOPIC, "thekey", "thevalue");
-        kafkaWriter.write(KafkaConfig.TEST_RESPONSE_TOPIC, "thekey2", "thevalue2");
+        kafkaWriter.write(KafkaConfig.TEST_REQUEST_TOPIC, "thekey3", "thevalue3");
         int i = 0;
     }
 
