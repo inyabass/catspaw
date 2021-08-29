@@ -1,11 +1,13 @@
-package listeners;
+package com.inyabass.catspaw.listeners;
 
-import clients.KafkaConfig;
-import clients.KafkaReader;
-import logging.Logger;
+import com.inyabass.catspaw.clients.KafkaConfig;
+import com.inyabass.catspaw.clients.KafkaReader;
+import com.inyabass.catspaw.config.ConfigReader;
+import com.inyabass.catspaw.logging.Logger;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 import java.lang.invoke.MethodHandles;
+import java.time.Duration;
 
 public class TestRequestListener implements Listener {
 
@@ -14,9 +16,12 @@ public class TestRequestListener implements Listener {
     String key = null;
     String value = null;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Throwable {
         TestRequestListener testRequestListener = new TestRequestListener();
-        KafkaReader kafkaReader = new KafkaReader(testRequestListener, KafkaConfig.TEST_REQUEST_TOPIC, KafkaConfig.TEST_REQUEST_LISTENER_GROUP, KafkaConfig.TEST_REQUEST_LISTENER_POLL_DURATION);
+        String topic = ConfigReader.get(KafkaConfig.TOPIC);
+        String groupId = ConfigReader.get(KafkaConfig.GROUP_ID);
+        Duration duration = Duration.ofSeconds(Integer.parseInt(ConfigReader.get(KafkaConfig.POLL_DURATION)));
+        KafkaReader kafkaReader = new KafkaReader(testRequestListener, topic, groupId, duration);
         kafkaReader.pollLoop();
     }
 

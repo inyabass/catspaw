@@ -1,13 +1,12 @@
-package clients;
+package com.inyabass.catspaw.clients;
 
-import config.ConfigReader;
-import listeners.Listener;
-import logging.Logger;
+import com.inyabass.catspaw.config.ConfigReader;
+import com.inyabass.catspaw.listeners.Listener;
+import com.inyabass.catspaw.logging.Logger;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.junit.Assert;
-import listeners.TestRequestListener;
 
 import java.lang.invoke.MethodHandles;
 import java.time.Duration;

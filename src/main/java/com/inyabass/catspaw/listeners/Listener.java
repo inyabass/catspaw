@@ -1,4 +1,4 @@
-package listeners;
+package com.inyabass.catspaw.listeners;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 

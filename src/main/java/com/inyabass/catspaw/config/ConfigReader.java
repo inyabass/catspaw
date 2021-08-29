@@ -1,9 +1,8 @@
-package config;
+package com.inyabass.catspaw.config;
 
-import logging.Logger;
+import com.inyabass.catspaw.logging.Logger;
 import org.junit.Assert;
 
-import java.beans.Encoder;
 import java.io.InputStream;
 import java.lang.invoke.MethodHandles;
 import java.nio.charset.StandardCharsets;
@@ -15,6 +14,8 @@ import java.util.Set;
 public class ConfigReader {
 
     final static Logger logger = new Logger(MethodHandles.lookup().lookupClass());
+
+    public static final String FILE_BASE = "com/inyabass/catspaw/";
 
     private static final String ENVIRONMENT_VARIABLE = "catspaw.config";
 
@@ -52,13 +53,13 @@ public class ConfigReader {
         ConfigReader.properties = new Properties();
         if(fileNames.contains(",")) {
             logger.debug("Multiple Configuration Files Found");
-            String[] parts = fileNames.split(",");
+            String[] parts = fileNames.trim().split(",");
             for(int i = 0; i < parts.length; i++) {
-                ConfigReader.paths.add(parts[i]);
+                ConfigReader.paths.add(FILE_BASE + parts[i].trim());
             }
         } else {
             logger.debug("Single Configuration File Found");
-            ConfigReader.paths.add(fileNames);
+            ConfigReader.paths.add(FILE_BASE + fileNames.trim());
         }
         logger.debug("Loading first config file from: " + ConfigReader.paths.get(0).trim());
         InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(ConfigReader.paths.get(0).trim());

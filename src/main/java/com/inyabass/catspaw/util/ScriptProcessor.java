@@ -1,7 +1,7 @@
-package util;
+package com.inyabass.catspaw.util;
 
-import config.ConfigReader;
-import logging.Logger;
+import com.inyabass.catspaw.config.ConfigReader;
+import com.inyabass.catspaw.logging.Logger;
 import org.junit.Assert;
 
 import java.io.BufferedReader;

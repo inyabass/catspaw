@@ -1,7 +1,7 @@
-package clients;
+package com.inyabass.catspaw.clients;
 
-import config.ConfigReader;
-import logging.Logger;
+import com.inyabass.catspaw.config.ConfigReader;
+import com.inyabass.catspaw.logging.Logger;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
@@ -18,7 +18,7 @@ public class KafkaWriter {
 
     public static void main(String[] args) throws Throwable {
         KafkaWriter kafkaWriter = new KafkaWriter();
-        kafkaWriter.write(KafkaConfig.TEST_REQUEST_TOPIC, "thekey3", "thevalue3");
+        kafkaWriter.write(KafkaConfig.TEST_REQUEST_TOPIC, "thekey4", "thevalue4");
         int i = 0;
     }
 

@@ -1,4 +1,4 @@
-package clients;
+package com.inyabass.catspaw.clients;
 
 import java.time.Duration;
 
@@ -11,6 +11,8 @@ public class KafkaConfig {
     public static final String RETRIES = "retries";
     public static final String CLIENT_ID = "client.id";
     public static final String GROUP_ID = "group.id";
+    public static final String TOPIC = "topic";
+    public static final String POLL_DURATION = "poll.duration";
     public static final String ENABLE_AUTO_COMMIT = "enable.auto.commit";
     public static final String MAX_POLL_RECORDS = "max.poll.records";
     public static final String KEY_DESERIALIZER = "key.deserializer";
