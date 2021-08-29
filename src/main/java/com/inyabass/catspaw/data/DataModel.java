@@ -10,7 +10,7 @@ import org.slf4j.Logger;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
+import java.util.*;
 
 public class DataModel {
 
@@ -128,6 +128,11 @@ public class DataModel {
         String sizePath = path + ".size()";
         int size = this.documentContext.read(sizePath);
         return size;
+    }
+
+    public List<String> getPropertiesOf(String path) {
+        Map<String, Object> fields = this.documentContext.read(path);
+        return new ArrayList<String>(fields.keySet());
     }
 
     protected String replace(String string, int index) {

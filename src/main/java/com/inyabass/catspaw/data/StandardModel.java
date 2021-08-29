@@ -14,7 +14,7 @@ public enum StandardModel {
     private String fileName = null;
 
     StandardModel(String fileName) {
-        this.fileName = ConfigReader.FILE_BASE + fileName;
+        this.fileName = ConfigReader.FILE_BASE + "json/" + fileName;
     }
 
     public String getFilename() {
