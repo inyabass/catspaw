@@ -3,6 +3,9 @@ package com.inyabass.catspaw.config;
 import com.inyabass.catspaw.logging.Logger;
 import org.junit.Assert;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.lang.invoke.MethodHandles;
 import java.nio.charset.StandardCharsets;
@@ -55,21 +58,21 @@ public class ConfigReader {
             logger.debug("Multiple Configuration Files Found");
             String[] parts = fileNames.trim().split(",");
             for(int i = 0; i < parts.length; i++) {
-                ConfigReader.paths.add(FILE_BASE + parts[i].trim());
+                ConfigReader.paths.add(parts[i].trim());
             }
         } else {
             logger.debug("Single Configuration File Found");
-            ConfigReader.paths.add(FILE_BASE + fileNames.trim());
+            ConfigReader.paths.add(fileNames.trim());
         }
         logger.debug("Loading first config file from: " + ConfigReader.paths.get(0).trim());
-        InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(ConfigReader.paths.get(0).trim());
+        InputStream inputStream = new FileInputStream(new File(ConfigReader.paths.get(0).trim()));
         Assert.assertNotNull("Invalid Configuration file: " + ConfigReader.paths.get(0).trim(), inputStream);
         ConfigReader.properties.load(inputStream);
         if(ConfigReader.paths.size() > 1) {
             for(int i = 1;i < paths.size(); i++) {
                 Properties propertiesToMerge = new Properties();
                 logger.debug("Loading Other Config File: " + ConfigReader.paths.get(i).trim());
-                inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(ConfigReader.paths.get(i).trim());
+                inputStream = inputStream = new FileInputStream(new File(ConfigReader.paths.get(i).trim()));
                 Assert.assertNotNull("Invalid Configuration file: " + ConfigReader.paths.get(i).trim(), inputStream);
                 propertiesToMerge.load(inputStream);
                 ConfigReader.mergeInWithOverride(propertiesToMerge);

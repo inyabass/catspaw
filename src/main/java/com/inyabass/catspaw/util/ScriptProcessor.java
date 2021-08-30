@@ -31,7 +31,7 @@ public class ScriptProcessor {
         scriptProcessor.addLine("git clone " + ConfigReader.get("git.repo.url"));
         scriptProcessor.addLine("cd catspaw");
         scriptProcessor.addLine("git checkout develop");
-        scriptProcessor.addLine("mvn compile");
+        scriptProcessor.addLine("mvn clean package");
         scriptProcessor.run();
     }
 
