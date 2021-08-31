@@ -20,7 +20,7 @@ public class ConfigReader {
 
     public static final String FILE_BASE = "com/inyabass/catspaw/";
 
-    private static final String ENVIRONMENT_VARIABLE = "catspaw.config";
+    public static final String ENVIRONMENT_VARIABLE = "catspaw.config";
 
     private static Properties properties = null;
     private static ArrayList<String> paths = new ArrayList<>();
@@ -37,7 +37,7 @@ public class ConfigReader {
             return;
         }
         String fileNames = System.getProperty(ConfigReader.ENVIRONMENT_VARIABLE);
-        logger.debug("Reading Environment Variable: " + ConfigReader.ENVIRONMENT_VARIABLE + " to get Config File Names");
+        logger.debug("Reading Java Property: " + ConfigReader.ENVIRONMENT_VARIABLE + " to get Config File Names");
         if(fileNames == null) {
             Assert.fail("No Configuration File(s) Specified in Environment Variable '" + ConfigReader.ENVIRONMENT_VARIABLE + "'");
         }

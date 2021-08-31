@@ -1,0 +1,12 @@
+{
+  "requestor": "mark",
+  "targets": [
+    {
+      "target": "database",
+      "options": {
+        "option1": "value1"
+      }
+    }
+  ],
+  "status": "new"
+}

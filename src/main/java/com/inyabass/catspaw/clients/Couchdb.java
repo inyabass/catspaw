@@ -4,6 +4,7 @@ import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 
+import java.io.InputStream;
 import java.net.URL;
 
 public class Couchdb {
@@ -36,5 +37,13 @@ public class Couchdb {
 
     public int getHttpStatus() {
         return this.response.getStatusCode();
+    }
+
+    public InputStream getBodyAsInputStream() {
+        return this.response.getBody().asInputStream();
+    }
+
+    public String getBodyAsJsonString() {
+        return this.response.getBody().asString();
     }
 }

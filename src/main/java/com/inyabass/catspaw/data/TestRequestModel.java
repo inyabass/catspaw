@@ -4,9 +4,7 @@ import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 
 import java.io.InputStream;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class TestRequestModel extends DataModel {
 
@@ -51,8 +49,16 @@ public class TestRequestModel extends DataModel {
         this.load(inputStream);
     }
 
+    public void addGuid(String guid) {
+        this.addString(ROOT, GUID_PATH, guid);
+    }
+
     public String getGuid() {
         return this.getString(GUID_PATH);
+    }
+
+    public void setGuid(String guid) {
+        this.setString(GUID_PATH, guid);
     }
 
     public String getRequestor() {
@@ -61,6 +67,14 @@ public class TestRequestModel extends DataModel {
 
     public String getTimeRequested() {
         return this.getString(TIME_REQUESTED_PATH);
+    }
+
+    public void addTimeRequested(String time) {
+        this.addString(ROOT, TIME_REQUESTED_PATH, time);
+    }
+
+    public void setTimeRequested(String timeRequested) {
+        this.setString(TIME_REQUESTED_PATH, timeRequested);
     }
 
     public String getTagExpression() {
@@ -109,6 +123,10 @@ public class TestRequestModel extends DataModel {
 
     public void setStatusMessage(String value) {
         this.setString(STATUS_MESSAGE_PATH, value);
+    }
+
+    public void addStatusMessage(String message) {
+        this.addString(ROOT, STATUS_MESSAGE_PATH, message);
     }
 
     public void addResultJson(Object json) {

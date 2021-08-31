@@ -28,7 +28,6 @@ public class TestRequestListener implements Listener {
     public void processRecord(ConsumerRecord<String, String> consumerRecord) {
         this.key = consumerRecord.key();
         this.value = consumerRecord.value();
-        logger.info("key: " + this.key);
-        logger.info("value: " + this.value);
+        logger.info("[" + this.key + "]" + this.value);
     }
 }
