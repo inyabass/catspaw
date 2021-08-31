@@ -27,5 +27,7 @@
     }
   ],
   "status": "new",
-  "statusMessage": ""
+  "statusMessage": "",
+  "resultJson": {},
+  "stdout": []
 }

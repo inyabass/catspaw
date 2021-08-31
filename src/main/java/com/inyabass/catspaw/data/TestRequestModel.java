@@ -1,7 +1,12 @@
 package com.inyabass.catspaw.data;
 
+import com.jayway.jsonpath.DocumentContext;
+import com.jayway.jsonpath.JsonPath;
+
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class TestRequestModel extends DataModel {
 
@@ -16,10 +21,18 @@ public class TestRequestModel extends DataModel {
     private static String TARGETS_PATH = "targets";
     private static String TARGET_PATH = TARGETS_PATH + "[" + REPLACEABLE + "].target";
     private static String OPTIONS_PATH = TARGETS_PATH + "[" + REPLACEABLE + "].options";
+    private static String STATUS_PATH = "status";
+    private static String STATUS_MESSAGE_PATH = "statusMessage";
+    private static String RESULT_JSON_PATH = "resultJson";
+    private static String STDOUT_PATH = "stdout";
 
     public static void main(String[] args) {
         TestRequestModel testRequestModel = new TestRequestModel(StandardModel.TEST_REQUEST);
-        List<String> props = testRequestModel.getPropertiesList(0);
+        DocumentContext dc = JsonPath.parse("{ \"output1\": \"output1value\"}");
+        testRequestModel.setStatus("hello");
+        testRequestModel.addStdout();
+        testRequestModel.addStdoutLine("aline");
+        testRequestModel.addResultJson(dc);
         int i = 0;
     }
 
@@ -80,5 +93,49 @@ public class TestRequestModel extends DataModel {
 
     public List<String> getOptionsList(int index) {
         return getPropertiesOf(this.replace(OPTIONS_PATH, index));
+    }
+
+    public String getStatus() {
+        return this.getString(STATUS_PATH);
+    }
+
+    public void setStatus(String value) {
+        this.setString(STATUS_PATH, value);
+    }
+
+    public String getStatusMessage() {
+        return this.getString(STATUS_MESSAGE_PATH);
+    }
+
+    public void setStatusMessage(String value) {
+        this.setString(STATUS_MESSAGE_PATH, value);
+    }
+
+    public void addResultJson(Object json) {
+        this.addObject(ROOT, RESULT_JSON_PATH, json);
+    }
+
+    public Object getResultJson() {
+        return this.getObject(RESULT_JSON_PATH);
+    }
+
+    public void setResultJson(Object json) {
+        this.setObject(RESULT_JSON_PATH, json);
+    }
+
+    public void addStdout() {
+        this.addStringArrayObject(ROOT, STDOUT_PATH);
+    }
+
+    public void addStdoutLine(String line) {
+        this.addElementToStringArray(STDOUT_PATH, line);
+    }
+
+    public int getStdoutSize() {
+        return this.getSizeOfArray(STDOUT_PATH);
+    }
+
+    public String getStdoutLine(int index) {
+        return this.getElementOfStringArray(STDOUT_PATH, index);
     }
 }

@@ -3,6 +3,7 @@ package com.inyabass.catspaw.data;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.internal.JsonFormatter;
+import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
@@ -110,6 +111,28 @@ public class DataModel {
         this.documentContext.put(jsonPath, name, value);
     }
 
+    public void addObject(String basePath, String name, Object value) {
+        Assert.assertNotNull("No Valid Model available", this.documentContext);
+        JsonPath jsonPath = JsonPath.compile(basePath);
+        this.documentContext.put(jsonPath, name, value);
+    }
+
+    public void addStringArrayObject(String basePath, String name) {
+        Assert.assertNotNull("No Valid Model available", this.documentContext);
+        JsonPath jsonPath = JsonPath.compile(basePath);
+        this.documentContext.put(jsonPath, name, new JSONArray());
+    }
+
+    public Object getObject(String path) {
+        JsonPath jsonPath = JsonPath.compile(path);
+        return this.documentContext.read(jsonPath);
+    }
+
+    public void setObject(String path, Object object) {
+        JsonPath jsonPath = JsonPath.compile(path);
+        this.documentContext.set(jsonPath, object);
+    }
+
     public void renameKey(String path, String newName) {
         Assert.assertNotNull("No Valid Model available", this.documentContext);
         String[] parts = path.split("\\.");
@@ -128,6 +151,16 @@ public class DataModel {
         String sizePath = path + ".size()";
         int size = this.documentContext.read(sizePath);
         return size;
+    }
+
+    public void addElementToStringArray(String path, String value) {
+        JsonPath jsonPath = JsonPath.compile(path);
+        this.documentContext.add(jsonPath, value);
+    }
+
+    public String getElementOfStringArray(String path, int index) {
+        String elementPath = path + "[" + index + "]";
+        return this.getString(elementPath);
     }
 
     public List<String> getPropertiesOf(String path) {
