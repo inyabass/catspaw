@@ -5,7 +5,6 @@ import org.junit.Assert;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.lang.invoke.MethodHandles;
 import java.nio.charset.StandardCharsets;
@@ -20,7 +19,8 @@ public class ConfigReader {
 
     public static final String FILE_BASE = "com/inyabass/catspaw/";
 
-    public static final String ENVIRONMENT_VARIABLE = "catspaw.config";
+    public static final String CATSPAW_CONFIG_ENV_VARIABLE = "CATSPAW_CONFIG";
+    public static final String CATSPAW_CONFIG_JVM_PROPERTY = "catspaw.config";
 
     private static Properties properties = null;
     private static ArrayList<String> paths = new ArrayList<>();
@@ -36,10 +36,15 @@ public class ConfigReader {
         if(properties != null) {
             return;
         }
-        String fileNames = System.getProperty(ConfigReader.ENVIRONMENT_VARIABLE);
-        logger.debug("Reading Java Property: " + ConfigReader.ENVIRONMENT_VARIABLE + " to get Config File Names");
+        String fileNames = null;
+        logger.info("Reading Environment Variable: " + ConfigReader.CATSPAW_CONFIG_ENV_VARIABLE + " to get Config File Names");
+        fileNames = System.getenv(CATSPAW_CONFIG_ENV_VARIABLE);
+        if(fileNames==null||fileNames.equals("")) {
+            logger.info("Not found so Reading Java Property: " + ConfigReader.CATSPAW_CONFIG_JVM_PROPERTY + " to get Config File Names");
+            fileNames = System.getProperty(ConfigReader.CATSPAW_CONFIG_JVM_PROPERTY);
+        }
         if(fileNames == null) {
-            Assert.fail("No Configuration File(s) Specified in Environment Variable '" + ConfigReader.ENVIRONMENT_VARIABLE + "'");
+            Assert.fail("No Configuration File(s) could be found");
         }
         ConfigReader.load(fileNames);
     }

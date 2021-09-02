@@ -14,10 +14,6 @@ public class Application {
 	private final static Logger logger = new Logger(MethodHandles.lookup().lookupClass());
 
 	public static void main(String[] args) {
-		if(args.length==1) {
-			logger.info("Config Files are: " + args[0]);
-			System.setProperty(ConfigReader.ENVIRONMENT_VARIABLE, args[0]);
-		}
 		ApplicationContext ctx = SpringApplication.run(Application.class, args);
 	}
 }
