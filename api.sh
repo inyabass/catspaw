@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 export CATSPAW_CONFIG="src/main/resources/com/inyabass/catspaw/TestRequestListener.properties"
-mvn spring-boot:run
+java -jar latestjars/catspaw-api.jar
