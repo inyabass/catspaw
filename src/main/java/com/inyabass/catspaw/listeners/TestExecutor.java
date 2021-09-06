@@ -1,9 +1,11 @@
 package com.inyabass.catspaw.listeners;
 
 import com.inyabass.catspaw.clients.KafkaReader;
+import com.inyabass.catspaw.clients.KafkaWriter;
 import com.inyabass.catspaw.config.ConfigProperties;
 import com.inyabass.catspaw.config.ConfigReader;
 import com.inyabass.catspaw.data.TestRequestModel;
+import com.inyabass.catspaw.data.TestResponseModel;
 import com.inyabass.catspaw.logging.Logger;
 import com.inyabass.catspaw.util.ScriptProcessor;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -17,8 +19,9 @@ public class TestExecutor implements Listener {
 
     final static Logger logger = new Logger(MethodHandles.lookup().lookupClass());
 
-    String guid = null;
-    String inputJson = null;
+    private String guid = null;
+    private String inputJson = null;
+    private KafkaWriter kafkaWriter = new KafkaWriter();
 
     public TestExecutor() throws Throwable {
         logger.info("TestExecutor starting");
@@ -38,6 +41,9 @@ public class TestExecutor implements Listener {
         this.guid = consumerRecord.key();
         this.inputJson = consumerRecord.value();
         logger.info(this.guid, "Start Processing " + this.inputJson);
+        //
+        // Parse Kafka Test Request json payload
+        //
         TestRequestModel testRequestModel = null;
         try {
             testRequestModel = new TestRequestModel(this.inputJson);
@@ -46,6 +52,9 @@ public class TestExecutor implements Listener {
             logger.info(this.guid, "End Processing - ERROR");
             return;
         }
+        //
+        // Set Test Request to "in-progress" and put to Couchdb
+        //
         testRequestModel.setStatus("in-progress");
         if(ListenerHelper.putCouchdbCatsEntry(logger, testRequestModel)) {
             logger.info(this.guid, "couchdb record put - status 'in-progress'");
@@ -53,6 +62,9 @@ public class TestExecutor implements Listener {
             logger.info(this.guid, "End Processing - ERROR");
             return;
         }
+        //
+        // Figure out working directory and clear it if found or create it if not found
+        //
         String workingDirectory = null;
         try {
             workingDirectory = ConfigReader.get(ConfigProperties.SCRIPTPROCESSOR_WORKING_DIRECTORY);
@@ -113,7 +125,27 @@ public class TestExecutor implements Listener {
         // post zipped object to S3
         // capture test results json and zip it up
         // post zipped object to S3
-        // write test-response kafka record
+
+        //
+        // Write Test Response Kafka message status "new"
+        //
+        TestResponseModel testResponseModel = new TestResponseModel(testRequestModel.export());
+        testResponseModel.setStatus("new");
+        testResponseModel.delete_id();
+        testResponseModel.delete_rev();
+        try {
+            this.kafkaWriter.write(ConfigProperties.TEST_RESPONSE_TOPIC, testResponseModel.getGuid(), testResponseModel.export());
+        } catch (Throwable t) {
+            logger.error(this.guid, "Unable to Write to test-response: " + t.getMessage());
+            testRequestModel.setStatus("error");
+            testRequestModel.setStatusMessage("Unable to Write to test-response: " + t.getMessage());
+            ListenerHelper.updateCouchdbCatsEntry(logger, testRequestModel);
+            logger.info(this.guid, "couchdb record update - status 'error'");
+            logger.info(this.guid, "End Processing - ERROR");
+            return;
+        }
+        // Update Couchdb entry status to "done"
+        //
         testRequestModel.setStatus("done");
         if(!ListenerHelper.updateCouchdbCatsEntry(logger, testRequestModel)) {
             logger.info(this.guid, "End Processing - ERROR");

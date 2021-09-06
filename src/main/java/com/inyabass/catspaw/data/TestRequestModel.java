@@ -47,6 +47,10 @@ public class TestRequestModel extends DataModel {
         int i = 0;
     }
 
+    public void delete_id() {
+        this.delete(_ID_PATH);
+    }
+
     public String get_id() {
         return this.getString(_ID_PATH);
     }
@@ -57,6 +61,10 @@ public class TestRequestModel extends DataModel {
 
     public void add_rev(String rev) {
         this.addString(ROOT, _REV_PATH, rev);
+    }
+
+    public void delete_rev() {
+        this.delete(_REV_PATH);
     }
 
     public String get_rev() {
