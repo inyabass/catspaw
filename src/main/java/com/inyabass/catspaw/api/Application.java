@@ -1,6 +1,5 @@
 package com.inyabass.catspaw.api;
 
-import com.inyabass.catspaw.config.ConfigReader;
 import com.inyabass.catspaw.logging.Logger;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

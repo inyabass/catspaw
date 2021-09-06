@@ -1,13 +1,12 @@
 package com.inyabass.catspaw.data;
 
-import com.jayway.jsonpath.DocumentContext;
-import com.jayway.jsonpath.JsonPath;
-
 import java.io.InputStream;
 import java.util.List;
 
 public class TestRequestModel extends DataModel {
 
+    private static String _ID_PATH = "_id";
+    private static String _REV_PATH = "_rev";
     private static String GUID_PATH = "guid";
     private static String REQUESTOR_PATH = "requestor";
     private static String TIME_REQUESTED_PATH = "timeRequested";
@@ -21,16 +20,10 @@ public class TestRequestModel extends DataModel {
     private static String OPTIONS_PATH = TARGETS_PATH + "[" + REPLACEABLE + "].options";
     private static String STATUS_PATH = "status";
     private static String STATUS_MESSAGE_PATH = "statusMessage";
-    private static String RESULT_JSON_PATH = "resultJson";
-    private static String STDOUT_PATH = "stdout";
 
     public static void main(String[] args) {
         TestRequestModel testRequestModel = new TestRequestModel(StandardModel.TEST_REQUEST);
-        DocumentContext dc = JsonPath.parse("{ \"output1\": \"output1value\"}");
         testRequestModel.setStatus("hello");
-        testRequestModel.addStdout();
-        testRequestModel.addStdoutLine("aline");
-        testRequestModel.addResultJson(dc);
         int i = 0;
     }
 
@@ -47,6 +40,31 @@ public class TestRequestModel extends DataModel {
 
     public TestRequestModel(InputStream inputStream) {
         this.load(inputStream);
+    }
+
+    public void add_id(String id) {
+        this.addString(ROOT, _ID_PATH, id);
+        int i = 0;
+    }
+
+    public String get_id() {
+        return this.getString(_ID_PATH);
+    }
+
+    public void set_id(String id) {
+        this.setString(_ID_PATH, id);
+    }
+
+    public void add_rev(String rev) {
+        this.addString(ROOT, _REV_PATH, rev);
+    }
+
+    public String get_rev() {
+        return this.getString(_REV_PATH);
+    }
+
+    public void set_rev(String rev) {
+        this.setString(_REV_PATH, rev);
     }
 
     public void addGuid(String guid) {
@@ -127,33 +145,5 @@ public class TestRequestModel extends DataModel {
 
     public void addStatusMessage(String message) {
         this.addString(ROOT, STATUS_MESSAGE_PATH, message);
-    }
-
-    public void addResultJson(Object json) {
-        this.addObject(ROOT, RESULT_JSON_PATH, json);
-    }
-
-    public Object getResultJson() {
-        return this.getObject(RESULT_JSON_PATH);
-    }
-
-    public void setResultJson(Object json) {
-        this.setObject(RESULT_JSON_PATH, json);
-    }
-
-    public void addStdout() {
-        this.addStringArrayObject(ROOT, STDOUT_PATH);
-    }
-
-    public void addStdoutLine(String line) {
-        this.addElementToStringArray(STDOUT_PATH, line);
-    }
-
-    public int getStdoutSize() {
-        return this.getSizeOfArray(STDOUT_PATH);
-    }
-
-    public String getStdoutLine(int index) {
-        return this.getElementOfStringArray(STDOUT_PATH, index);
     }
 }

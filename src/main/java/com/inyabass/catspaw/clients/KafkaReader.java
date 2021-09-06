@@ -1,5 +1,6 @@
 package com.inyabass.catspaw.clients;
 
+import com.inyabass.catspaw.config.ConfigProperties;
 import com.inyabass.catspaw.config.ConfigReader;
 import com.inyabass.catspaw.listeners.Listener;
 import com.inyabass.catspaw.logging.Logger;
@@ -34,20 +35,21 @@ public class KafkaReader {
     private KafkaConsumer<String, String> createClient() {
         Properties properties = new Properties();
         try {
-            properties.put(KafkaConfig.BOOTSTRAP_SERVERS, ConfigReader.get(KafkaConfig.BOOTSTRAP_SERVERS));
-            properties.put(KafkaConfig.KEY_DESERIALIZER, ConfigReader.get(KafkaConfig.KEY_DESERIALIZER));
-            properties.put(KafkaConfig.VALUE_DESERIALIZER, ConfigReader.get(KafkaConfig.VALUE_DESERIALIZER));
-            properties.put(KafkaConfig.CLIENT_ID, ConfigReader.get(KafkaConfig.CLIENT_ID));
-            properties.put(KafkaConfig.GROUP_ID, this.groupId);
-            properties.put(KafkaConfig.ENABLE_AUTO_COMMIT, ConfigReader.get(KafkaConfig.ENABLE_AUTO_COMMIT));
-            properties.put(KafkaConfig.MAX_POLL_RECORDS, ConfigReader.get(KafkaConfig.MAX_POLL_RECORDS));
-            properties.put(KafkaConfig.AUTO_OFFSET_RESET, ConfigReader.get(KafkaConfig.AUTO_OFFSET_RESET));
+            properties.put(ConfigProperties.BOOTSTRAP_SERVERS, ConfigReader.get(ConfigProperties.BOOTSTRAP_SERVERS));
+            properties.put(ConfigProperties.KEY_DESERIALIZER, ConfigReader.get(ConfigProperties.KEY_DESERIALIZER));
+            properties.put(ConfigProperties.VALUE_DESERIALIZER, ConfigReader.get(ConfigProperties.VALUE_DESERIALIZER));
+            properties.put(ConfigProperties.CLIENT_ID, ConfigReader.get(ConfigProperties.CLIENT_ID));
+            properties.put(ConfigProperties.GROUP_ID, this.groupId);
+            properties.put(ConfigProperties.ENABLE_AUTO_COMMIT, ConfigReader.get(ConfigProperties.ENABLE_AUTO_COMMIT));
+            properties.put(ConfigProperties.MAX_POLL_RECORDS, ConfigReader.get(ConfigProperties.MAX_POLL_RECORDS));
+            properties.put(ConfigProperties.AUTO_OFFSET_RESET, ConfigReader.get(ConfigProperties.AUTO_OFFSET_RESET));
+            properties.put(ConfigProperties.ALLOW_AUTO_CREATE_TOPICS, ConfigReader.get(ConfigProperties.ALLOW_AUTO_CREATE_TOPICS));
         } catch (Throwable t) {
             Assert.fail("Unable to Get Consumer Configuration: " + t.getMessage());
         }
         KafkaConsumer<String, String> kafkaConsumer = new KafkaConsumer<String, String>(properties);
         kafkaConsumer.subscribe(Collections.singletonList(this.topic));
-        logger.info("Kafka Consumer Created - Topic '" + this.topic + "' Group ID '" + this.groupId + "'");
+        logger.debug("Kafka Consumer Created on Topic '" + this.topic + "' Group ID '" + this.groupId + "'");
         return kafkaConsumer;
     }
 

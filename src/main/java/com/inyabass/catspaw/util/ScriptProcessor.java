@@ -5,6 +5,7 @@ import com.inyabass.catspaw.logging.Logger;
 import org.junit.Assert;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.InputStreamReader;
 import java.lang.invoke.MethodHandles;
@@ -21,15 +22,17 @@ public class ScriptProcessor {
 
     private List<String> lines = null;
     private String workingDirectory = null;
+    private File stdoutFile = null;
+    private int exitValue = 0;
 
-    private static String fs = System.getProperty("file.separator");
+    public static String fs = System.getProperty("file.separator");
 
     public static void main(String[] args) throws Throwable {
         ScriptProcessor scriptProcessor = new ScriptProcessor();
-        scriptProcessor.setWorkingDirectory(System.getProperty("java.io.tmpdir") + "cats" + fs + System.currentTimeMillis());
+        scriptProcessor.setWorkingDirectory("mark");
         scriptProcessor.addLine("pwd");
-        scriptProcessor.addLine("git clone " + ConfigReader.get("git.repo.url"));
-        scriptProcessor.addLine("cd catspaw");
+        scriptProcessor.addLine("git clone " + ConfigReader.get("git.repo.url") + " feline");
+        scriptProcessor.addLine("cd feline");
         scriptProcessor.addLine("git checkout develop");
         scriptProcessor.addLine("mvn clean package");
         scriptProcessor.run();
@@ -43,40 +46,37 @@ public class ScriptProcessor {
         this.workingDirectory = workingDirectory;
     }
 
+    public File getStdoutFile() {
+        return this.stdoutFile;
+    }
+
+    public int getExitValue() {
+        return this.exitValue;
+    }
+
     public void addLine(String line) {
        this.lines.add(line);
     }
 
     public void run() throws Throwable {
         if(this.lines.size()==0) {
-            logger.info("No script lines to process");
+            logger.error("No script lines to process");
             return;
         }
-        String tempFileName = System.currentTimeMillis() + ".sh";
-        String tempFilePath = null;
-        Path dirPath = null;
-        if(this.workingDirectory!=null&&!this.workingDirectory.equals("")) {
-            dirPath = Paths.get(this.workingDirectory);
-            if(!Files.exists(dirPath)) {
-                Files.createDirectories(dirPath);
-            }
-            tempFilePath = this.workingDirectory + fs + tempFileName;
-        } else {
-            tempFilePath = tempFileName;
-        }
-        logger.info("Creating temp script " + tempFilePath);
-        Path scriptFilePath = Paths.get(tempFilePath);
+        String scriptFileName = System.getProperty("java.io.tmpdir") + "catspaw-" + System.currentTimeMillis() + ".sh";
+        logger.info("Creating temp script " + scriptFileName);
+        Path scriptFilePath = Paths.get(scriptFileName);
         if(Files.exists(scriptFilePath)) {
             Files.delete(scriptFilePath);
         }
         Files.createFile(scriptFilePath);
         scriptFilePath.toFile().setExecutable(true);
-        FileWriter fileWriter = new FileWriter(tempFilePath);
+        FileWriter fileWriter = new FileWriter(scriptFileName);
         fileWriter.write("#!/usr/bin/env bash" + "\n");
         int i = 0;
         for(String string: this.lines) {
             i++;
-            logger.info("Command -> " + string);
+            logger.debug("Command -> " + string);
             if(i < this.lines.size()) {
                 fileWriter.write(string + "\n");
             } else {
@@ -84,23 +84,39 @@ public class ScriptProcessor {
             }
         }
         fileWriter.close();
+        String workingDirectoryName = System.getProperty("java.io.tmpdir");
+        Path dirPath = Paths.get(workingDirectoryName);;
+        if(this.workingDirectory!=null&&!this.workingDirectory.equals("")) {
+            workingDirectoryName += fs + this.workingDirectory;
+            dirPath = Paths.get(workingDirectoryName);
+            if(!Files.exists(dirPath)) {
+                Files.createDirectories(dirPath);
+            }
+        }
         ProcessBuilder processBuilder = new ProcessBuilder();
         processBuilder.redirectErrorStream(true);
+        Process process = null;
         Map<String, String> environment = processBuilder.environment();
         try {
-            if(dirPath!=null) {
-                processBuilder.directory(dirPath.toFile());
-            }
-            processBuilder.command(this.getBash(environment), tempFileName);
-            Process process = processBuilder.start();
+            processBuilder.directory(dirPath.toFile());
+            processBuilder.command(this.getBash(environment), scriptFileName);
+            process = processBuilder.start();
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String line;
+            String outputFileName = System.getProperty("java.io.tmpdir") + fs + "catsrunlog-" + System.currentTimeMillis() + ".log";
+            fileWriter = new FileWriter(outputFileName);
+            String line = null;
+            logger.debug("Script stdout");
             while ((line = reader.readLine()) != null) {
-                logger.info(line);
+                logger.debug(line);
+                fileWriter.write(line + "\n");
             }
+            fileWriter.close();
+            this.stdoutFile = new File(outputFileName);
         } catch (Throwable t) {
+            logger.error("Unable to run bash: " + t.getMessage());
             Assert.fail("Unable to Run bash");
         }
+        this.exitValue = process.exitValue();
     }
 
     private String getBash(Map<String, String> environment) {

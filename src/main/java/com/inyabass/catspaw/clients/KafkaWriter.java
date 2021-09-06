@@ -1,5 +1,6 @@
 package com.inyabass.catspaw.clients;
 
+import com.inyabass.catspaw.config.ConfigProperties;
 import com.inyabass.catspaw.config.ConfigReader;
 import com.inyabass.catspaw.logging.Logger;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -18,7 +19,7 @@ public class KafkaWriter {
 
     public static void main(String[] args) throws Throwable {
         KafkaWriter kafkaWriter = new KafkaWriter();
-        kafkaWriter.write(KafkaConfig.TEST_REQUEST_TOPIC, "thekey4", "thevalue4");
+        kafkaWriter.write(ConfigProperties.TEST_REQUEST_TOPIC, "thekey4", "thevalue4");
         int i = 0;
     }
 
@@ -29,17 +30,17 @@ public class KafkaWriter {
     private KafkaProducer<String, String> createClient() {
         Properties properties = new Properties();
         try {
-            properties.put(KafkaConfig.BOOTSTRAP_SERVERS, ConfigReader.get(KafkaConfig.BOOTSTRAP_SERVERS));
-            properties.put(KafkaConfig.KEY_SERIALIZER, ConfigReader.get(KafkaConfig.KEY_SERIALIZER));
-            properties.put(KafkaConfig.VALUE_SERIALIZER, ConfigReader.get(KafkaConfig.VALUE_SERIALIZER));
-            properties.put(KafkaConfig.ACKS, ConfigReader.get(KafkaConfig.ACKS));
-            properties.put(KafkaConfig.RETRIES, ConfigReader.get(KafkaConfig.RETRIES));
-            properties.put(KafkaConfig.CLIENT_ID, ConfigReader.get(KafkaConfig.CLIENT_ID));
+            properties.put(ConfigProperties.BOOTSTRAP_SERVERS, ConfigReader.get(ConfigProperties.BOOTSTRAP_SERVERS));
+            properties.put(ConfigProperties.KEY_SERIALIZER, ConfigReader.get(ConfigProperties.KEY_SERIALIZER));
+            properties.put(ConfigProperties.VALUE_SERIALIZER, ConfigReader.get(ConfigProperties.VALUE_SERIALIZER));
+            properties.put(ConfigProperties.ACKS, ConfigReader.get(ConfigProperties.ACKS));
+            properties.put(ConfigProperties.RETRIES, ConfigReader.get(ConfigProperties.RETRIES));
+            properties.put(ConfigProperties.CLIENT_ID, ConfigReader.get(ConfigProperties.CLIENT_ID));
         } catch (Throwable t) {
             Assert.fail("Unable to Get Producer Configuration: " + t.getMessage());
         }
         KafkaProducer<String, String> kafkaProducer = new KafkaProducer<String, String>(properties);
-        logger.info("Kafka Producer Created");
+        logger.debug("Kafka Producer Created");
         return kafkaProducer;
     }
 
@@ -47,6 +48,6 @@ public class KafkaWriter {
         ProducerRecord<String, String> producerRecord = new ProducerRecord<>(topic, key, value);
         RecordMetadata recordMetadata = this.kafkaProducer.send(producerRecord).get();
         this.kafkaProducer.flush();
-        logger.info("Record posted to " + topic + " offset " + recordMetadata.offset());
+        logger.debug(key, "Record posted to " + topic + " offset " + recordMetadata.offset());
     }
 }

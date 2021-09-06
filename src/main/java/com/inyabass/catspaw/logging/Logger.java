@@ -18,9 +18,21 @@ public class Logger {
         }
     }
 
+    public void info(String id, String message) {
+        if(this.logger.isInfoEnabled()) {
+            logger.info("[" + id + "] " + message);
+        }
+    }
+
     public void debug(String message) {
         if(this.logger.isDebugEnabled()) {
             logger.info(message);
+        }
+    }
+
+    public void debug(String id, String message) {
+        if(this.logger.isDebugEnabled()) {
+            logger.debug("[" + id + "] " + message);
         }
     }
 
@@ -30,15 +42,33 @@ public class Logger {
         }
     }
 
+    public void trace(String id, String message) {
+        if(this.logger.isTraceEnabled()) {
+            logger.trace("[" + id + "] " + message);
+        }
+    }
+
     public void error(String message) {
         if(this.logger.isErrorEnabled()) {
             logger.info(message);
         }
     }
 
+    public void error(String id, String message) {
+        if(this.logger.isErrorEnabled()) {
+            logger.error("[" + id + "] " + message);
+        }
+    }
+
     public void warn(String message) {
         if(this.logger.isWarnEnabled()) {
             logger.info(message);
+        }
+    }
+
+    public void warn(String id, String message) {
+        if(this.logger.isWarnEnabled()) {
+            logger.warn("[" + id + "] " + message);
         }
     }
 }

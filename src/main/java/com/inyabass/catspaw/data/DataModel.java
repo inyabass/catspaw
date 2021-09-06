@@ -11,7 +11,10 @@ import org.slf4j.Logger;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 public class DataModel {
 

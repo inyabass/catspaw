@@ -26,7 +26,7 @@ public class ConfigReader {
     private static ArrayList<String> paths = new ArrayList<>();
 
     public static void main(String[] args) throws Throwable {
-        String encoded = encode("abc123");
+        String encoded = encode("http://admin:xq2um8g0@desktop-5osreke.broadband:5984/cats/");
         System.out.println(encoded);
         String decoded = decode(encoded);
         System.out.println(decoded);

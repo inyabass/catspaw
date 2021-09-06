@@ -1,12 +1,15 @@
 package com.inyabass.catspaw.api;
 
-import com.inyabass.catspaw.clients.KafkaConfig;
 import com.inyabass.catspaw.clients.KafkaWriter;
+import com.inyabass.catspaw.config.ConfigProperties;
 import com.inyabass.catspaw.data.TestRequestModel;
 import com.inyabass.catspaw.logging.Logger;
 import com.inyabass.catspaw.util.Util;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.lang.invoke.MethodHandles;
 
@@ -22,22 +25,18 @@ public class ApiController {
 	@ResponseStatus(HttpStatus.CREATED)
 	@PostMapping("/")
 	public String post(@RequestBody String body) {
-		logger.info("New Request in");
-		if(body==null||body.equals("")) {
-			logger.info("Empty or null body");
-			throw new InvalidPayloadException("Empty or null body");
-		}
+		logger.info("New Request", "New Request for " + ConfigProperties.TEST_REQUEST_TOPIC);
 		this.body = body;
 		this.validateBody(this.body);
 		this.processBody(this.body);
-		return "{ \"status\": \"created\" }";
+		return Util.buildSpringJsonResponse(HttpStatus.CREATED.value(), "Created");
 	}
 
 	private void validateBody(String body) {
 		try {
 			this.testRequestModel = new TestRequestModel(body);
 		} catch (Throwable t) {
-			logger.info("Unable to parse JSON document body");
+			logger.info("New Request", "Unable to parse JSON document body");
 			throw new InvalidPayloadException("Unable to parse JSON document body");
 		}
 		String guid = null;
@@ -45,61 +44,58 @@ public class ApiController {
 			guid = this.testRequestModel.getGuid();
 		} catch (Throwable t) {
 			guid = Util.getGuid();
-			logger.info("[" + guid + "] assigning GUID " + guid);
+			logger.info(guid, "assigning GUID " + guid);
 			this.testRequestModel.addGuid(guid);
 		}
 		if(guid==null||guid.equals("")) {
-			guid = Util.getGuid();
-			logger.info("[" + guid + "] assigning GUID " + guid);
-			this.testRequestModel.setGuid(guid);
+			logger.info(guid, "guid Null or Blank");
+			throw new InvalidPayloadException("guid Null or Blank");
 		}
 		String requestor = null;
 		try {
 			requestor = this.testRequestModel.getRequestor();
 		} catch (Throwable t) {
-			logger.info("[" + guid + "] requestor not found");
-			throw new InvalidPayloadException("requestor not found");
+			logger.info(guid, "requestor Not Found");
+			throw new InvalidPayloadException("requestor Not Found");
 		}
 		if(requestor==null||requestor.equals("")) {
-			logger.info("[" + guid + "] requestor null or blank");
-			throw new InvalidPayloadException("requestor null or blank");
+			logger.info(guid, "requestor Null or Blank");
+			throw new InvalidPayloadException("requestor Null or Blank");
 		}
 		String timeRequested = null;
 		try {
 			timeRequested = this.testRequestModel.getTimeRequested();
 		} catch (Throwable t) {
-			logger.info("[" + guid + "] assigning timeRequested");
-			timeRequested = Util.getTimeStampNow();
+			timeRequested = Util.getStandardTimeStampNow();
+			logger.info(guid, "assigning timeRequested " + timeRequested);
 			this.testRequestModel.addTimeRequested(timeRequested);
 		}
 		if(timeRequested==null||timeRequested.equals("")) {
-			logger.info("[" + guid + "] assigning timeRequested");
-			timeRequested = Util.getTimeStampNow();
-			this.testRequestModel.setTimeRequested(timeRequested);
+			logger.info(guid, "timeRequested Null or Blank");
+			throw new InvalidPayloadException("timeRequested Null or Blank");
 		}
 		if(!Util.isValidTimeStamp(timeRequested)) {
-			logger.info("[" + guid + "] timeRequested invalid");
-			throw new InvalidPayloadException("timeRequested invalid");
+			logger.info(guid, "Invalid timeRequested");
+			throw new InvalidPayloadException("Invalid timeRequested");
 		}
 		String status = null;
 		try {
 			status = this.testRequestModel.getStatus();
 		} catch (Throwable t) {
-			logger.info("[" + guid + "] status not found");
-			throw new InvalidPayloadException("status not found");
+			logger.info(guid, "status Not Found");
+			throw new InvalidPayloadException("Status not Found");
 		}
 		if(status==null||!status.equals("new")) {
-			logger.info("[" + guid + "] status must be 'new'");
-			throw new InvalidPayloadException("status must be 'new'");
+			logger.info(guid, "status Must Be 'new'");
+			throw new InvalidPayloadException("Status Must Be 'new'");
 		}
 	}
 
 	public void processBody(String body) {
-
 		try {
-			this.kafkaWriter.write(KafkaConfig.TEST_REQUEST_TOPIC, this.testRequestModel.getGuid(), this.testRequestModel.export());
+			this.kafkaWriter.write(ConfigProperties.TEST_REQUEST_TOPIC, this.testRequestModel.getGuid(), this.testRequestModel.export());
 		} catch (Throwable t) {
-			logger.info("Kafka write failed: " + t.getMessage());
+			logger.info(this.testRequestModel.getGuid(), "Kafka write failed: " + t.getMessage());
 			throw new InvalidPayloadException("Unable to write to Kafka");
 		}
 	}
