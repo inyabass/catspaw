@@ -48,6 +48,6 @@ public class KafkaWriter {
         ProducerRecord<String, String> producerRecord = new ProducerRecord<>(topic, key, value);
         RecordMetadata recordMetadata = this.kafkaProducer.send(producerRecord).get();
         this.kafkaProducer.flush();
-        logger.debug(key, "Record posted to " + topic + " offset " + recordMetadata.offset());
+        logger.info(key, "Record posted to " + topic + " offset " + recordMetadata.offset());
     }
 }

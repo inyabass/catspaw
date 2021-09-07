@@ -35,6 +35,7 @@ public class ConfigProperties {
 
     // AWS S3
     public static final String AWS_DOWNLOAD_URL = "aws.download.url";
+    public static final String AWS_BUCKET_NAME = "aws.bucket.name";
     public static final String AWS_ACCESS_KEY = "aws.data.1";
     public static final String AWS_SECRET_KEY = "aws.data.2";
 }

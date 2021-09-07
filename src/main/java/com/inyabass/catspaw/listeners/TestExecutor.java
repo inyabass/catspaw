@@ -119,11 +119,15 @@ public class TestExecutor implements Listener {
             }
             logger.info(this.guid, "Created Working Directory " + workingDirectoryFull);
         }
-        // build script
-        // execute script
+        //
+        // build script to execute up to git pull
+        // execute script to git pull
+        // override properties in configuration files if present in json
+        // build script to execute test tags
+        // execute script capturing exit code
         // capture stdout and zip it up
         // post zipped object to S3
-        // capture test results json and zip it up
+        // capture test results json if present and zip it up
         // post zipped object to S3
 
         //

@@ -26,6 +26,7 @@ public class ConfigReader {
     private static ArrayList<String> paths = new ArrayList<>();
 
     public static void main(String[] args) throws Throwable {
+        System.out.println(encode("inyabass-catspaw"));
     }
 
     public static void ConfigReader() throws Throwable {
