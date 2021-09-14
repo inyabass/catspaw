@@ -19,6 +19,7 @@ public class ConfigProperties {
     public static final String ACKS = "acks";
     public static final String RETRIES = "retries";
     public static final String CLIENT_ID = "client.id";
+    public static final String GROUP_ID = "group.id";
     public static final String TEST_REQUEST_LISTENER_GROUP_ID = "test.request.listener.group.id";
     public static final String POLL_DURATION = "poll.duration";
     public static final String ENABLE_AUTO_COMMIT = "enable.auto.commit";

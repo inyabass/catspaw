@@ -39,7 +39,7 @@ public class KafkaReader {
             properties.put(ConfigProperties.KEY_DESERIALIZER, ConfigReader.get(ConfigProperties.KEY_DESERIALIZER));
             properties.put(ConfigProperties.VALUE_DESERIALIZER, ConfigReader.get(ConfigProperties.VALUE_DESERIALIZER));
             properties.put(ConfigProperties.CLIENT_ID, ConfigReader.get(ConfigProperties.CLIENT_ID));
-            properties.put(ConfigProperties.TEST_REQUEST_LISTENER_GROUP_ID, this.groupId);
+            properties.put(ConfigProperties.GROUP_ID, this.groupId);
             properties.put(ConfigProperties.ENABLE_AUTO_COMMIT, ConfigReader.get(ConfigProperties.ENABLE_AUTO_COMMIT));
             properties.put(ConfigProperties.MAX_POLL_RECORDS, ConfigReader.get(ConfigProperties.MAX_POLL_RECORDS));
             properties.put(ConfigProperties.AUTO_OFFSET_RESET, ConfigReader.get(ConfigProperties.AUTO_OFFSET_RESET));

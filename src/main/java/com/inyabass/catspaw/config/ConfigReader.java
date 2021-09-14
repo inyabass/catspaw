@@ -26,7 +26,6 @@ public class ConfigReader {
     private static ArrayList<String> paths = new ArrayList<>();
 
     public static void main(String[] args) throws Throwable {
-        System.out.println(encode("http://admin:xq2um8g0@desktop-5osreke.broadband:5984/"));
     }
 
     public static void ConfigReader() throws Throwable {
