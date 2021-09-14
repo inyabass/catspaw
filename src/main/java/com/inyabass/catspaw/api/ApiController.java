@@ -89,6 +89,13 @@ public class ApiController {
 			logger.info(guid, "status Must Be 'new'");
 			throw new InvalidPayloadException("Status Must Be 'new'");
 		}
+		String tagExpression = null;
+		try {
+			tagExpression = this.testRequestModel.getTagExpression();
+		} catch (Throwable t) {
+			logger.info(guid, "tagExpression Not Found");
+			throw new InvalidPayloadException("tagExpression not Found");
+		}
 	}
 
 	public void processBody(String body) {

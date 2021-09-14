@@ -4,6 +4,14 @@ import java.time.Duration;
 
 public class ConfigProperties {
 
+    // Config
+    public static String CONFIG_ID="config.id";
+
+    // Couchdb
+    public static final String COUCHDB_SERVER = "couchdb.server";
+    public static final String COUCHDB_CONFIG_DB = "couchdb.config.db";
+    public static final String COUCHDB_DATA_DB = "couchdb.data.db";
+
     // Kafka
     public static final String BOOTSTRAP_SERVERS = "bootstrap.servers";
     public static final String KEY_SERIALIZER = "key.serializer";
@@ -11,7 +19,7 @@ public class ConfigProperties {
     public static final String ACKS = "acks";
     public static final String RETRIES = "retries";
     public static final String CLIENT_ID = "client.id";
-    public static final String GROUP_ID = "group.id";
+    public static final String TEST_REQUEST_LISTENER_GROUP_ID = "test.request.listener.group.id";
     public static final String POLL_DURATION = "poll.duration";
     public static final String ENABLE_AUTO_COMMIT = "enable.auto.commit";
     public static final String MAX_POLL_RECORDS = "max.poll.records";
@@ -22,15 +30,13 @@ public class ConfigProperties {
     public static final String TEST_REQUEST_TOPIC = "test-request";
     public static final String TEST_RESPONSE_TOPIC = "test-response";
 
-    // Couchdb
-    public static final String COUCHDB_SERVER = "couchdb.server";
-
     // ScriptProcessor
     public static final String SCRIPTPROCESSOR_WORKING_DIRECTORY = "scriptprocessor.working.directory";
 
     // TestExecutor
     public static final String GIT_REPO_URL = "git.repo.url";
     public static final String GIT_CLONE_TO_DIRECTORY = "git.clone.to.directory";
+    public static final String CONFIG_DIRECTORY = "repo.config.directory";
     public static final String JSON_FILE_LOCATION = "json.file.location";
 
     // AWS S3

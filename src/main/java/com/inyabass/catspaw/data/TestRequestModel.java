@@ -123,6 +123,10 @@ public class TestRequestModel extends DataModel {
         return getPropertiesOf(this.replace(PROPERTIES_PATH, index));
     }
 
+    public String getProperty(int index, String propertyName) {
+        return getString(this.replace(PROPERTIES_PATH, index) + "." + propertyName);
+    }
+
     public int getTargetsSize() {
         return this.getSizeOfArray(TARGETS_PATH);
     }

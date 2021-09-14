@@ -13,7 +13,7 @@ public class ListenerHelper {
         Couchdb couchdb = null;
         String guid = testRequestModel.getGuid();
         try {
-            couchdb = new Couchdb(ConfigReader.get(ConfigProperties.COUCHDB_SERVER));
+            couchdb = new Couchdb(ConfigReader.get(ConfigProperties.COUCHDB_SERVER), ConfigReader.get(ConfigProperties.COUCHDB_DATA_DB));
         } catch (Throwable t) {
             logger.error(guid, "(PUT) Unable to create Couchdb client: " + t.getMessage());
             return false;
@@ -35,7 +35,7 @@ public class ListenerHelper {
         Couchdb couchdb = null;
         String guid = testRequestModel.getGuid();
         try {
-            couchdb = new Couchdb(ConfigReader.get(ConfigProperties.COUCHDB_SERVER));
+            couchdb = new Couchdb(ConfigReader.get(ConfigProperties.COUCHDB_SERVER), ConfigReader.get(ConfigProperties.COUCHDB_DATA_DB));
         } catch (Throwable t) {
             logger.error(guid, "(POST) Unable to create Couchdb client: " + t.getMessage());
             return false;
@@ -56,7 +56,7 @@ public class ListenerHelper {
         Couchdb couchdb = null;
         String guid = testRequestModel.getGuid();
         try {
-            couchdb = new Couchdb(ConfigReader.get(ConfigProperties.COUCHDB_SERVER));
+            couchdb = new Couchdb(ConfigReader.get(ConfigProperties.COUCHDB_SERVER), ConfigReader.get(ConfigProperties.COUCHDB_DATA_DB));
         } catch (Throwable t) {
             logger.error(guid, "(GET) Unable to create Couchdb client: " + t.getMessage());
             return false;

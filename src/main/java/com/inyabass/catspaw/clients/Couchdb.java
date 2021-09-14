@@ -16,18 +16,20 @@ public class Couchdb {
     final static Logger logger = new Logger(MethodHandles.lookup().lookupClass());
 
     private String serverUrl = null;
+    private String database = null;
     private RequestSpecification requestSpecification = null;
     private Response response = null;
 
     public static void main(String[] args) throws Throwable {
-        Couchdb couchdb = new Couchdb(ConfigReader.get(ConfigProperties.COUCHDB_SERVER));
+        Couchdb couchdb = new Couchdb(ConfigReader.get(ConfigProperties.COUCHDB_SERVER), ConfigReader.get(ConfigProperties.COUCHDB_DATA_DB));
         couchdb.get("2e2a18c3-8159-475b-ba54-aee1d6e6f302");
         System.out.println(couchdb.getBodyAsJsonString());
         int i = 0;
     }
 
-    public Couchdb(String serverUrl) {
+    public Couchdb(String serverUrl, String database) {
         this.serverUrl = serverUrl;
+        this.database = database;
     }
 
     private RequestSpecification getRequestSpecification() {
@@ -39,20 +41,20 @@ public class Couchdb {
 
     public void get(String id) throws Throwable {
         this.requestSpecification = this.getRequestSpecification();
-        this.response = this.requestSpecification.get(new URL(this.serverUrl + id));
+        this.response = this.requestSpecification.get(new URL(this.serverUrl + this.database + "/" + id));
     }
 
     public void post(String id, String body) throws Throwable {
         this.requestSpecification = this.getRequestSpecification();
         this.requestSpecification.body(body);
-        this.response = this.requestSpecification.post(new URL(this.serverUrl + id));
+        this.response = this.requestSpecification.post(new URL(this.serverUrl + this.database + "/" + id));
         int i = 0;
     }
 
     public void put(String id, String body) throws Throwable {
         this.requestSpecification = this.getRequestSpecification();
         this.requestSpecification.body(body);
-        this.response = this.requestSpecification.put(new URL(this.serverUrl + id));
+        this.response = this.requestSpecification.put(new URL(this.serverUrl + this.database + "/" + id));
     }
 
     public int getHttpStatus() {
