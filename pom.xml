@@ -25,6 +25,8 @@
         <jsonpath.version>2.6.0</jsonpath.version>
         <commons-io.version>2.6</commons-io.version>
         <restassured.version>4.3.1</restassured.version>
+        <logback-json-classic.version>0.1.5</logback-json-classic.version>
+        <logback-jackson.version>0.1.5</logback-jackson.version>
     </properties>
 
     <dependencies>
@@ -66,6 +68,16 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback.contrib</groupId>
+            <artifactId>logback-json-classic</artifactId>
+            <version>${logback-json-classic.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback.contrib</groupId>
+            <artifactId>logback-jackson</artifactId>
+            <version>${logback-jackson.version}</version>
         </dependency>
     </dependencies>
 

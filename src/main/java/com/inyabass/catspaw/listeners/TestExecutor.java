@@ -45,6 +45,257 @@ public class TestExecutor implements Listener {
         kafkaReader.pollLoop();
     }
 
+    public void processRecordNew(ConsumerRecord<String, String> consumerRecord) {
+        this.guid = consumerRecord.key();
+        this.inputJson = consumerRecord.value();
+        logger.info(this.guid, "Start Processing " + this.inputJson);
+        //
+        // Parse Kafka Test Request json payload
+        //
+        logger.info(this.guid, "Parse JSON Payload");
+        TestRequestModel testRequestModel = null;
+        try {
+            testRequestModel = new TestRequestModel(this.inputJson);
+        } catch (Throwable t) {
+            this.abendMessage(t, "Unable to Parse JSON");
+            return;
+        }
+        //
+        // Create Test Response Model from Test Request Model
+        //
+        TestResponseModel testResponseModel = new TestResponseModel(testRequestModel.export());
+        testResponseModel.setStatus("new");
+        //
+        // Figure out working directory and clear it if found or create it if not found
+        //
+        logger.info(this.guid, "Create or clear Working Directory");
+        String workingDirectory = null;
+        try {
+            workingDirectory = ConfigReader.get(ConfigProperties.SCRIPTPROCESSOR_WORKING_DIRECTORY);
+        } catch (Throwable t) {
+            testResponseModel.setStatus("error");
+            testResponseModel.setStatusMessage("Unable to determine working directory: " + t.getMessage());
+            this.abendWriteTestResponse(t, "Unable to determine working directory", testResponseModel);
+            return;
+        }
+        String workingDirectoryFull = System.getProperty("java.io.tmpdir") + workingDirectory;
+        if(Files.exists(Paths.get(workingDirectoryFull))) {
+            logger.info(guid, "Working Directory " + workingDirectoryFull + " exists - clearing");
+            ScriptProcessor scriptProcessor = new ScriptProcessor();
+            scriptProcessor.setWorkingDirectory(workingDirectory);
+            scriptProcessor.addLine("rm -fR *");
+            try {
+                scriptProcessor.run();
+            } catch (Throwable t) {
+                logger.error(this.guid, "Unable to clear working directory: " + t.getMessage());
+                testRequestModel.setStatus("error");
+                testRequestModel.setStatusMessage("Unable to clear working directory: " + t.getMessage());
+                ListenerHelper.updateCouchdbCatsEntry(logger, testRequestModel);
+                logger.info(this.guid, "couchdb record update - status 'error'");
+                logger.error(this.guid, "End Processing - ERROR");
+                return;
+            }
+            if(scriptProcessor.getExitValue()!=0) {
+                logger.error(this.guid, "Unable to clear working directory: " + scriptProcessor.getExitValue());
+                testRequestModel.setStatus("error");
+                testRequestModel.setStatusMessage("Unable to clear working directory: " + scriptProcessor.getExitValue());
+                ListenerHelper.updateCouchdbCatsEntry(logger, testRequestModel);
+                logger.info(this.guid, "couchdb record update - status 'error'");
+                logger.error(this.guid, "End Processing - ERROR");
+                return;
+            } else {
+                logger.info(this.guid, "Working Directory " + workingDirectoryFull + " Cleared");
+            }
+        } else {
+            try {
+                Files.createDirectories(Paths.get(workingDirectoryFull));
+            } catch (Throwable t) {
+                logger.error(this.guid, "Unable to create working directory: " + t.getMessage());
+                testRequestModel.setStatus("error");
+                testRequestModel.setStatusMessage("Unable to create working directory: " + t.getMessage());
+                ListenerHelper.updateCouchdbCatsEntry(logger, testRequestModel);
+                logger.info(this.guid, "couchdb record update - status 'error'");
+                logger.error(this.guid, "End Processing - ERROR");
+                return;
+            }
+            logger.info(this.guid, "Created Working Directory " + workingDirectoryFull);
+        }
+        //
+        // Build script to execute git pull
+        //
+        logger.info(this.guid, "Build script to clone repo");
+        String repoUrl = null;
+        try {
+            repoUrl = ConfigReader.get(ConfigProperties.GIT_REPO_URL);
+        } catch (Throwable t) {
+            logger.error(this.guid, "Unable to get Git Repo URL: " + t.getMessage());
+            testRequestModel.setStatus("error");
+            testRequestModel.setStatusMessage("Unable to get Git Repo URL: " + t.getMessage());
+            ListenerHelper.updateCouchdbCatsEntry(logger, testRequestModel);
+            logger.info(this.guid, "couchdb record update - status 'error'");
+            logger.error(this.guid, "End Processing - ERROR");
+            return;
+        }
+        String cloneToDirectory = null;
+        try {
+            cloneToDirectory = ConfigReader.get(ConfigProperties.GIT_CLONE_TO_DIRECTORY);
+        } catch (Throwable t) {
+            logger.error(this.guid, "Unable to get Clone-to Directory: " + t.getMessage());
+            testRequestModel.setStatus("error");
+            testRequestModel.setStatusMessage("Unable to get Clone-to Directory: " + t.getMessage());
+            ListenerHelper.updateCouchdbCatsEntry(logger, testRequestModel);
+            logger.info(this.guid, "couchdb record update - status 'error'");
+            logger.error(this.guid, "End Processing - ERROR");
+            return;
+        }
+        //
+        // Clone Repository
+        //
+        ScriptProcessor scriptProcessor = new ScriptProcessor();
+        scriptProcessor.setWorkingDirectory(workingDirectory);
+        try {
+            scriptProcessor.addLine("git clone " + repoUrl + " " + cloneToDirectory);
+        } catch (Throwable t) {
+            logger.error(this.guid, "Unable to build 'git clone' command: " + t.getMessage());
+            testRequestModel.setStatus("error");
+            testRequestModel.setStatusMessage("Unable to build 'git clone' command: " + t.getMessage());
+            ListenerHelper.updateCouchdbCatsEntry(logger, testRequestModel);
+            logger.info(this.guid, "couchdb record update - status 'error'");
+            logger.error(this.guid, "End Processing - ERROR");
+            return;
+        }
+        try {
+            scriptProcessor.run();
+        } catch (Throwable t) {
+            logger.error(this.guid, "Could not execute script to clone repo: " + t.getMessage());
+            testRequestModel.setStatus("error");
+            testRequestModel.setStatusMessage("Could not execute script to clone repo:: " + t.getMessage());
+            ListenerHelper.updateCouchdbCatsEntry(logger, testRequestModel);
+            this.writeResultsToS3(scriptProcessor.getStdoutFile(), null, null);
+            logger.info(this.guid, "couchdb record update - status 'error'");
+            logger.error(this.guid, "End Processing - ERROR");
+            return;
+        }
+        if(scriptProcessor.getExitValue()!=0) {
+            logger.error(this.guid, "Non-Zero exit code from script to clone repo: " + scriptProcessor.getExitValue());
+            testRequestModel.setStatus("error");
+            testRequestModel.setStatusMessage("Non-Zero exit code from script to clone repo: " + scriptProcessor.getExitValue());
+            ListenerHelper.updateCouchdbCatsEntry(logger, testRequestModel);
+            this.writeResultsToS3(scriptProcessor.getStdoutFile(), null, null);
+            logger.info(this.guid, "couchdb record update - status 'error'");
+            logger.error(this.guid, "End Processing - ERROR");
+            return;
+        }
+        String clonedDirectory = workingDirectoryFull + ScriptProcessor.fs + cloneToDirectory;
+        if(!Files.exists(Paths.get(clonedDirectory))) {
+            logger.error("Clone-to Directory not found - Repo was not cloned successfully");
+            testRequestModel.setStatus("error");
+            testRequestModel.setStatusMessage("Clone-to Directory not found - Repo was not cloned successfully");
+            ListenerHelper.updateCouchdbCatsEntry(logger, testRequestModel);
+            this.writeResultsToS3(scriptProcessor.getStdoutFile(), null, null);
+            logger.info(this.guid, "couchdb record update - status 'error'");
+            logger.error(this.guid, "End Processing - ERROR");
+            return;
+        }
+        File cloneStdoutFile = scriptProcessor.getStdoutFile();
+        //
+        // Override any parameters in files specificed by the Test Request
+        //
+        this.overrideParameters(testRequestModel, clonedDirectory);
+        //
+        // Build and execute Script to perform Testing
+        //
+        scriptProcessor = new ScriptProcessor();
+        scriptProcessor.setWorkingDirectory(clonedDirectory);
+        String branch = null;
+        try {
+            branch = testRequestModel.getBranch();
+            scriptProcessor.addLine("git checkout " + branch);
+        } catch (Throwable t) {
+            // Branch is optional
+        }
+        String tagExpression = null;
+        try {
+            tagExpression = testRequestModel.getTagExpression();
+        } catch (Throwable t) {
+            logger.error("Cannot determine tagExpression: " + t.getMessage());
+            testRequestModel.setStatus("error");
+            testRequestModel.setStatusMessage("Cannot determine tagExpression: " + t.getMessage());
+            ListenerHelper.updateCouchdbCatsEntry(logger, testRequestModel);
+            this.writeResultsToS3(cloneStdoutFile, null, null);
+            logger.info(this.guid, "couchdb record update - status 'error'");
+            logger.error(this.guid, "End Processing - ERROR");
+            return;
+        }
+        scriptProcessor.addLine("mvn exec:exec etc etc");
+        try {
+            scriptProcessor.run();
+        } catch (Throwable t) {
+            logger.error(this.guid, "Could not execute script to execute tests: " + t.getMessage());
+            testRequestModel.setStatus("error");
+            testRequestModel.setStatusMessage("Could not execute script to execute tests: " + t.getMessage());
+            ListenerHelper.updateCouchdbCatsEntry(logger, testRequestModel);
+            this.writeResultsToS3(cloneStdoutFile, scriptProcessor.getStdoutFile(), null);
+            logger.info(this.guid, "couchdb record update - status 'error'");
+            logger.error(this.guid, "End Processing - ERROR");
+            return;
+        }
+        if(scriptProcessor.getExitValue()!=0) {
+            logger.error(this.guid, "Non-Zero exit code from script to execute tests: " + scriptProcessor.getExitValue());
+            testRequestModel.setStatus("error");
+            testRequestModel.setStatusMessage("Non-Zero exit code from script to execute tests: " + scriptProcessor.getExitValue());
+            ListenerHelper.updateCouchdbCatsEntry(logger, testRequestModel);
+            this.writeResultsToS3(cloneStdoutFile, scriptProcessor.getStdoutFile(), null);
+            logger.info(this.guid, "couchdb record update - status 'error'");
+            logger.error(this.guid, "End Processing - ERROR");
+            return;
+        }
+        File execStdoutFile = scriptProcessor.getStdoutFile();
+        //
+        // Capture outout JSON and write to S3
+        //
+        String jsonFileLocation = null;
+        try {
+            jsonFileLocation = ConfigReader.get(ConfigProperties.JSON_FILE_LOCATION);
+        } catch (Throwable t) {
+            logger.error(this.guid, "Could not determine output json filename: " + t.getMessage());
+            testRequestModel.setStatus("error");
+            testRequestModel.setStatusMessage("Could not determine output json filename: " + t.getMessage());
+            ListenerHelper.updateCouchdbCatsEntry(logger, testRequestModel);
+            this.writeResultsToS3(cloneStdoutFile, execStdoutFile, null);
+            logger.info(this.guid, "couchdb record update - status 'error'");
+            logger.error(this.guid, "End Processing - ERROR");
+            return;
+        }
+        File jsonOutputFile = new File(clonedDirectory + ScriptProcessor.fs + jsonFileLocation);
+        if(!jsonOutputFile.exists()) {
+            logger.error(this.guid, "Could not find Json Output file: " + jsonFileLocation);
+            testRequestModel.setStatus("error");
+            testRequestModel.setStatusMessage("Could not find Json Output file: " + jsonFileLocation);
+            ListenerHelper.updateCouchdbCatsEntry(logger, testRequestModel);
+            this.writeResultsToS3(cloneStdoutFile, execStdoutFile, null);
+            logger.info(this.guid, "couchdb record update - status 'error'");
+            logger.error(this.guid, "End Processing - ERROR");
+            return;
+        }
+        this.writeResultsToS3(cloneStdoutFile, execStdoutFile, jsonOutputFile);
+    }
+
+    private void abendMessage(Throwable t, String message) {
+        logger.error(this.guid, message + ": " + t.getMessage());
+        logger.error(this.guid, "End Processing - ERROR");
+    }
+
+    private void abendWriteTestResponse(Throwable t, String message, TestResponseModel testResponseModel) {
+        try {
+            this.kafkaWriter.write(ConfigProperties.TEST_RESPONSE_TOPIC, testResponseModel.getGuid(), testResponseModel.export());
+        } catch (Throwable t2) {
+            this.abendMessage(t2, message + ": Also Unable to Write to test-response");
+            return;
+        }
+        this.abendMessage(t, message);
+    }
+
     public void processRecord(ConsumerRecord<String, String> consumerRecord) {
         this.guid = consumerRecord.key();
         this.inputJson = consumerRecord.value();

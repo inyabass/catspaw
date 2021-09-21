@@ -5,8 +5,6 @@ import java.util.List;
 
 public class TestRequestModel extends DataModel {
 
-    private static String _ID_PATH = "_id";
-    private static String _REV_PATH = "_rev";
     private static String GUID_PATH = "guid";
     private static String REQUESTOR_PATH = "requestor";
     private static String TIME_REQUESTED_PATH = "timeRequested";
@@ -40,39 +38,6 @@ public class TestRequestModel extends DataModel {
 
     public TestRequestModel(InputStream inputStream) {
         this.load(inputStream);
-    }
-
-    public void add_id(String id) {
-        this.addString(ROOT, _ID_PATH, id);
-        int i = 0;
-    }
-
-    public void delete_id() {
-        this.delete(_ID_PATH);
-    }
-
-    public String get_id() {
-        return this.getString(_ID_PATH);
-    }
-
-    public void set_id(String id) {
-        this.setString(_ID_PATH, id);
-    }
-
-    public void add_rev(String rev) {
-        this.addString(ROOT, _REV_PATH, rev);
-    }
-
-    public void delete_rev() {
-        this.delete(_REV_PATH);
-    }
-
-    public String get_rev() {
-        return this.getString(_REV_PATH);
-    }
-
-    public void set_rev(String rev) {
-        this.setString(_REV_PATH, rev);
     }
 
     public void addGuid(String guid) {
