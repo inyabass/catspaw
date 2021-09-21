@@ -78,17 +78,6 @@ public class ApiController {
 			logger.info(guid, "Invalid timeRequested");
 			throw new InvalidPayloadException("Invalid timeRequested");
 		}
-		String status = null;
-		try {
-			status = this.testRequestModel.getStatus();
-		} catch (Throwable t) {
-			logger.info(guid, "status Not Found");
-			throw new InvalidPayloadException("Status not Found");
-		}
-		if(status==null||!status.equals("new")) {
-			logger.info(guid, "status Must Be 'new'");
-			throw new InvalidPayloadException("Status Must Be 'new'");
-		}
 		String tagExpression = null;
 		try {
 			tagExpression = this.testRequestModel.getTagExpression();

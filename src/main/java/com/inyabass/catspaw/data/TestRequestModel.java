@@ -16,14 +16,6 @@ public class TestRequestModel extends DataModel {
     private static String TARGETS_PATH = "targets";
     private static String TARGET_PATH = TARGETS_PATH + "[" + REPLACEABLE + "].target";
     private static String OPTIONS_PATH = TARGETS_PATH + "[" + REPLACEABLE + "].options";
-    private static String STATUS_PATH = "status";
-    private static String STATUS_MESSAGE_PATH = "statusMessage";
-
-    public static void main(String[] args) {
-        TestRequestModel testRequestModel = new TestRequestModel(StandardModel.TEST_REQUEST);
-        testRequestModel.setStatus("hello");
-        int i = 0;
-    }
 
     public TestRequestModel() {
     }
@@ -102,25 +94,5 @@ public class TestRequestModel extends DataModel {
 
     public List<String> getOptionsList(int index) {
         return getPropertiesOf(this.replace(OPTIONS_PATH, index));
-    }
-
-    public String getStatus() {
-        return this.getString(STATUS_PATH);
-    }
-
-    public void setStatus(String value) {
-        this.setString(STATUS_PATH, value);
-    }
-
-    public String getStatusMessage() {
-        return this.getString(STATUS_MESSAGE_PATH);
-    }
-
-    public void setStatusMessage(String value) {
-        this.setString(STATUS_MESSAGE_PATH, value);
-    }
-
-    public void addStatusMessage(String message) {
-        this.addString(ROOT, STATUS_MESSAGE_PATH, message);
     }
 }
