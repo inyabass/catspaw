@@ -67,6 +67,7 @@ public class ConfigReader {
         }
         logger.debug("Loading first config file from: " + ConfigReader.paths.get(0).trim());
         InputStream inputStream = new FileInputStream(new File(ConfigReader.paths.get(0).trim()));
+        FileInputStream f = null;
         Assert.assertNotNull("Invalid Configuration file: " + ConfigReader.paths.get(0).trim(), inputStream);
         ConfigReader.properties.load(inputStream);
         if(ConfigReader.paths.size() > 1) {
