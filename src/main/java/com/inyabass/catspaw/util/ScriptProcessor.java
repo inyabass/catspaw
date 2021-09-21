@@ -28,14 +28,7 @@ public class ScriptProcessor {
     public static String fs = System.getProperty("file.separator");
 
     public static void main(String[] args) throws Throwable {
-        ScriptProcessor scriptProcessor = new ScriptProcessor();
-        scriptProcessor.setWorkingDirectory("mark");
-        scriptProcessor.addLine("pwd");
-        scriptProcessor.addLine("git clone " + ConfigReader.get("git.repo.url") + " feline");
-        scriptProcessor.addLine("cd feline");
-        scriptProcessor.addLine("git checkout develop");
-        scriptProcessor.addLine("mvn clean package");
-        scriptProcessor.run();
+        System.out.println("x");
     }
 
     public ScriptProcessor() {
@@ -64,7 +57,7 @@ public class ScriptProcessor {
             return;
         }
         String scriptFileName = System.getProperty("java.io.tmpdir") + "catspaw-" + System.currentTimeMillis() + ".sh";
-        logger.info("Creating temp script " + scriptFileName);
+        logger.debug("Creating temp script " + scriptFileName);
         Path scriptFilePath = Paths.get(scriptFileName);
         if(Files.exists(scriptFilePath)) {
             Files.delete(scriptFilePath);

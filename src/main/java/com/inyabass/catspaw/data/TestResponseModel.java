@@ -29,6 +29,10 @@ public class TestResponseModel extends TestRequestModel {
         this.setString(STATUS_PATH, value);
     }
 
+    public void addStatus(String json) {
+        this.addString(ROOT, STATUS_PATH, json);
+    }
+
     public String getStatusMessage() {
         return this.getString(STATUS_MESSAGE_PATH);
     }

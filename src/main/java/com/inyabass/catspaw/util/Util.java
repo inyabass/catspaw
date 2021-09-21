@@ -125,7 +125,7 @@ public class Util {
             logger.error("Unable to close FileOutputStream: " + t.getMessage());
             return null;
         }
-        logger.info("File " + inputFileName + " zipped as " + zipFileName);
+        logger.debug("File " + inputFileName + " zipped as " + zipFileName);
         return zipFile;
     }
 

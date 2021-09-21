@@ -48,11 +48,15 @@ public class TestExecutor implements Listener {
     public void processRecord(ConsumerRecord<String, String> consumerRecord) {
         this.guid = consumerRecord.key();
         this.inputJson = consumerRecord.value();
+        this.process();
+    }
+
+    public void process() {
         logger.info(this.guid, "Start Processing " + this.inputJson);
         //
         // Parse Kafka Test Request json payload
         //
-        logger.info(this.guid, "Parse JSON Payload");
+        logger.info(this.guid, "Parsing JSON Payload");
         TestRequestModel testRequestModel = null;
         try {
             testRequestModel = new TestRequestModel(this.inputJson);
@@ -64,11 +68,12 @@ public class TestExecutor implements Listener {
         // Create Test Response Model from Test Request Model
         //
         TestResponseModel testResponseModel = new TestResponseModel(testRequestModel.export());
-        testResponseModel.setStatus("new");
+        testResponseModel.addStatus("new");
+        testResponseModel.addStatusMessage("");
         //
         // Figure out working directory and clear it if found or create it if not found
         //
-        logger.info(this.guid, "Create or clear Working Directory");
+        logger.info(this.guid, "Creating or clearing Working Directory");
         String workingDirectory = null;
         try {
             workingDirectory = ConfigReader.get(ConfigProperties.SCRIPTPROCESSOR_WORKING_DIRECTORY);
@@ -114,7 +119,7 @@ public class TestExecutor implements Listener {
         //
         // Build script to execute git pull
         //
-        logger.info(this.guid, "Build script to clone repo");
+        logger.info(this.guid, "Building script to clone repository");
         String repoUrl = null;
         try {
             repoUrl = ConfigReader.get(ConfigProperties.GIT_REPO_URL);
@@ -136,6 +141,7 @@ public class TestExecutor implements Listener {
         //
         // Clone Repository
         //
+        logger.info(this.guid, "Executing script to clone repository");
         ScriptProcessor scriptProcessor = new ScriptProcessor();
         scriptProcessor.setWorkingDirectory(workingDirectory);
         try {
@@ -161,33 +167,40 @@ public class TestExecutor implements Listener {
             this.abendWriteTestResponse(null, "Unable to clear working directory: " + scriptProcessor.getExitValue(), testResponseModel);
             return;
         }
-        String clonedDirectory = workingDirectoryFull + ScriptProcessor.fs + cloneToDirectory;
-        if(!Files.exists(Paths.get(clonedDirectory))) {
+        logger.info(this.guid, "Checking cloned directory exists");
+        String clonedDirectory = workingDirectory + ScriptProcessor.fs + cloneToDirectory;
+        String clonedDirectoryFull = workingDirectoryFull + ScriptProcessor.fs + cloneToDirectory;
+        if(!Files.exists(Paths.get(clonedDirectoryFull))) {
             testResponseModel.setStatus("error");
             testResponseModel.setStatusMessage("Clone-to Directory not found - Repo was not cloned successfully");
             this.writeResultsToS3(scriptProcessor.getStdoutFile(), null, null, testResponseModel);
             return;
         }
+        logger.info(this.guid, "Repository Cloned successfully");
         File cloneStdoutFile = scriptProcessor.getStdoutFile();
         //
         // Override any parameters in files specificed by the Test Request
         //
-        this.overrideParameters(testRequestModel, clonedDirectory);
+        logger.info(this.guid, "Overriding any parameters");
+        this.overrideParameters(testRequestModel, clonedDirectoryFull);
         //
         // Build and execute Script to perform Testing
         //
+        logger.info(this.guid, "Building script to perform tests");
         scriptProcessor = new ScriptProcessor();
         scriptProcessor.setWorkingDirectory(clonedDirectory);
         String branch = null;
         try {
             branch = testRequestModel.getBranch();
+            logger.info(this.guid, "Using branch '" + branch + "'");
             scriptProcessor.addLine("git checkout " + branch);
         } catch (Throwable t) {
-            // Branch is optional
+            logger.info(this.guid, "Using default branch");
         }
         String tagExpression = null;
         try {
             tagExpression = testRequestModel.getTagExpression();
+            logger.info(this.guid, "Using Tag Expression '" + tagExpression + "'");
         } catch (Throwable t) {
             testResponseModel.setStatus("error");
             testResponseModel.setStatusMessage("Cannot determine tagExpression: " + t.getMessage());
@@ -195,7 +208,9 @@ public class TestExecutor implements Listener {
             this.abendWriteTestResponse(t, "Cannot determine tagExpression", testResponseModel);
             return;
         }
-        scriptProcessor.addLine("mvn exec:exec etc etc");
+        scriptProcessor.addLine("mvn compile");
+        scriptProcessor.addLine("./runtests.sh @api-1");
+        logger.info(this.guid, "Executing script to run tests");
         try {
             scriptProcessor.run();
         } catch (Throwable t) {
@@ -206,16 +221,16 @@ public class TestExecutor implements Listener {
             return;
         }
         if(scriptProcessor.getExitValue()!=0) {
-            testResponseModel.setStatus("error");
+            logger.warn(this.guid, "Non-Zero exit code from script to execute tests: " + scriptProcessor.getExitValue());
+            testResponseModel.setStatus("warn");
             testResponseModel.setStatusMessage("Non-Zero exit code from script to execute tests: " + scriptProcessor.getExitValue());
-            this.writeResultsToS3(cloneStdoutFile, scriptProcessor.getStdoutFile(), null, testResponseModel);
-            this.abendWriteTestResponse(null, "Non-Zero exit code from script to execute tests: " + scriptProcessor.getExitValue(), testResponseModel);
-            return;
         }
+        logger.info(this.guid, "Test Script Execution Complete");
         File execStdoutFile = scriptProcessor.getStdoutFile();
         //
         // Capture outout JSON and write to S3
         //
+        logger.info(this.guid, "Capturing output JSON File");
         String jsonFileLocation = null;
         try {
             jsonFileLocation = ConfigReader.get(ConfigProperties.JSON_FILE_LOCATION);
@@ -226,20 +241,23 @@ public class TestExecutor implements Listener {
             this.abendWriteTestResponse(t, "Could not determine output json filename", testResponseModel);
             return;
         }
-        File jsonOutputFile = new File(clonedDirectory + ScriptProcessor.fs + jsonFileLocation);
+        File jsonOutputFile = new File(clonedDirectoryFull + ScriptProcessor.fs + jsonFileLocation);
         if(!jsonOutputFile.exists()) {
-            logger.error(this.guid, "Could not find Json Output file: " + jsonFileLocation);
-            testResponseModel.setStatus("error");
-            testResponseModel.setStatusMessage("Could not find Json Output file: " + jsonFileLocation);
-            this.writeResultsToS3(cloneStdoutFile, execStdoutFile, null, testResponseModel);
-            this.abendWriteTestResponse(null, "Could not find Json Output file: " + jsonFileLocation, testResponseModel);
-            return;
+            logger.warn(this.guid, "Could not find Json Output file: " + clonedDirectoryFull + ScriptProcessor.fs + jsonFileLocation);
+            if(testResponseModel.getStatus().equals("new")) {
+                testResponseModel.setStatus("warn");
+                testResponseModel.setStatusMessage("Could not find Json Output file: " + jsonFileLocation);
+            }
+            jsonOutputFile = null;
         }
         this.writeResultsToS3(cloneStdoutFile, execStdoutFile, jsonOutputFile, testResponseModel);
         //
         // Write to Test Response
+        //
+        logger.info(this.guid, "Writing message to test-response topic");
         try {
             this.kafkaWriter.write(ConfigProperties.TEST_RESPONSE_TOPIC, testResponseModel.getGuid(), testResponseModel.export());
+            logger.info(this.guid, "Written to test-response: " + testResponseModel.export());
         } catch (Throwable t) {
             this.abendMessage(t, "Unable to Write to test-response");
             return;
@@ -248,17 +266,18 @@ public class TestExecutor implements Listener {
 
     private void abendMessage(Throwable t, String message) {
         String messageToWrite = message;
-        try {
+        if(t!=null) {
             messageToWrite += ": " + t.getMessage();
-        } catch (Throwable t2) {
         }
         logger.error(this.guid, messageToWrite);
         logger.error(this.guid, "End Processing - ERROR");
     }
 
     private void abendWriteTestResponse(Throwable t, String message, TestResponseModel testResponseModel) {
+        logger.info(this.guid, "Writing message to test-response topic (after error)");
         try {
             this.kafkaWriter.write(ConfigProperties.TEST_RESPONSE_TOPIC, testResponseModel.getGuid(), testResponseModel.export());
+            logger.info(this.guid, "Written to test-response: " + testResponseModel.export());
         } catch (Throwable t2) {
             this.abendMessage(t, message + ": Also Unable to Write to test-response: " + t2.getMessage());
             return;
@@ -329,8 +348,10 @@ public class TestExecutor implements Listener {
     }
 
     private void writeResultsToS3(File cloneStdoutFile, File execStdoutFile, File jsonFile, TestResponseModel testResponseModel) {
+        logger.info(this.guid, "Writing results to AWS S3 Bucket");
         String tempDir = System.getProperty("java.io.tmpdir");
         if (cloneStdoutFile != null || execStdoutFile != null) {
+            logger.info(this.guid, "Writing stdout file(s) to AWS S3");
             String stdListFileName = this.guid + "_stdlist.log";
             String stdListFileNameFull = tempDir + stdListFileName;
             Path stdListPath = Paths.get(stdListFileNameFull);
@@ -362,8 +383,10 @@ public class TestExecutor implements Listener {
             File S3ZippedStdListFile = Util.zipInPlace(stdListPath.toFile());
             this.writeFileToS3(S3ZippedStdListFile);
             testResponseModel.addStdout(S3ZippedStdListFile.getName());
+            logger.info(this.guid, "Stdout file(s) written to AWS S3");
         }
         if(jsonFile!=null) {
+            logger.info(this.guid, "Writing JSON log file to AWS S3");
             String jsonFileName = this.guid + ".json";
             String jsonFileNameFull = tempDir + jsonFileName;
             Path jsonPath = Paths.get(jsonFileNameFull);
@@ -386,6 +409,7 @@ public class TestExecutor implements Listener {
             File S3ZippedJsonFile = Util.zipInPlace(jsonPath.toFile());
             this.writeFileToS3(S3ZippedJsonFile);
             testResponseModel.addResultJson(S3ZippedJsonFile.getName());
+            logger.info(this.guid, "JSON log file written to AWS S3");
         }
     }
 

@@ -1,5 +1,7 @@
 {
   "requestor": "mark",
+  "tagExpression": "@api-1",
+  "branch": "develop",
   "targets": [
     {
       "target": "database",
