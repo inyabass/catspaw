@@ -1,5 +1,6 @@
 package com.inyabass.catspaw.listeners;
 
+import com.inyabass.catspaw.clients.AwsS3Client;
 import com.inyabass.catspaw.clients.KafkaReader;
 import com.inyabass.catspaw.clients.KafkaWriter;
 import com.inyabass.catspaw.config.ConfigProperties;
@@ -273,7 +274,14 @@ public class TestExecutor implements Listener {
             }
             jsonOutputFile = null;
         }
-        this.writeResultsToS3(cloneStdoutFile, execStdoutFile, jsonOutputFile, testResponseModel);
+        try {
+            this.writeResultsToS3(cloneStdoutFile, execStdoutFile, jsonOutputFile, testResponseModel);
+        } catch (Throwable t) {
+            testResponseModel.setStatus("error");
+            testResponseModel.setStatusMessage("Could not Write: " + t.getMessage());
+            this.abendWriteTestResponse(t, "Could not determine output json filename", testResponseModel);
+            return;
+        }
         //
         // Write to Test Response
         //
@@ -371,7 +379,7 @@ public class TestExecutor implements Listener {
         }
     }
 
-    private void writeResultsToS3(File cloneStdoutFile, File execStdoutFile, File jsonFile, TestResponseModel testResponseModel) {
+    private void writeResultsToS3(File cloneStdoutFile, File execStdoutFile, File jsonFile, TestResponseModel testResponseModel) throws Throwable {
         logger.info(this.guid, "Writing results to AWS S3 Bucket");
         String tempDir = System.getProperty("java.io.tmpdir");
         if (cloneStdoutFile != null || execStdoutFile != null) {
@@ -387,6 +395,7 @@ public class TestExecutor implements Listener {
                 }
             } catch (Throwable t) {
                 logger.error(this.guid, "Unable to create StdList file: " + stdListFileName + " " + t.getMessage());
+                throw t;
             }
             try {
                 FileOutputStream stdListOutputStream = new FileOutputStream(stdListPath.toFile());
@@ -403,10 +412,16 @@ public class TestExecutor implements Listener {
                 stdListOutputStream.close();
             } catch (Throwable t) {
                 logger.error(this.guid, "Unable to create StdList file: " + stdListFileName + " " + t.getMessage());
+                throw t;
             }
             File S3ZippedStdListFile = Util.zipInPlace(stdListPath.toFile());
-            this.writeFileToS3(S3ZippedStdListFile);
             testResponseModel.addStdout(S3ZippedStdListFile.getName());
+            try {
+                this.writeFileToS3(S3ZippedStdListFile);
+            } catch (Throwable t) {
+                logger.error(this.guid, "Unable to Write Stdout File(s) to AWS S3");
+                throw t;
+            }
             logger.info(this.guid, "Stdout file(s) written to AWS S3");
         }
         if(jsonFile!=null) {
@@ -431,16 +446,27 @@ public class TestExecutor implements Listener {
                 logger.error(this.guid, "Unable to create Json file: " + jsonFileName + " " + t.getMessage());
             }
             File S3ZippedJsonFile = Util.zipInPlace(jsonPath.toFile());
-            this.writeFileToS3(S3ZippedJsonFile);
             testResponseModel.addResultJson(S3ZippedJsonFile.getName());
+            try {
+                this.writeFileToS3(S3ZippedJsonFile);
+            } catch (Throwable t) {
+                logger.error(this.guid, "Unable to Write JSON Log File to AWS S3");
+                throw t;
+            }
             logger.info(this.guid, "JSON log file written to AWS S3");
         }
     }
 
-    private void writeFileToS3(File file) {
+    private void writeFileToS3(File file) throws Throwable {
         if(!file.exists()) {
             logger.warn(this.guid, "Could not find file to write to S3: " + file.getName());
             return;
+        }
+        try {
+            AwsS3Client awsS3Client = new AwsS3Client();
+        } catch (Throwable t) {
+            logger.error(this.guid, "Unable to create Amazon S3 Client Client");
+            throw t;
         }
     }
 }
