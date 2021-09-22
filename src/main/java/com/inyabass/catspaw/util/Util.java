@@ -132,4 +132,22 @@ public class Util {
     public static File unzipInPlace(File fileToUnzip) {
         return null;
     }
+
+    public static boolean isWindows() {
+        if(System.getProperty("os.name").toLowerCase().contains("windows")) {
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean isUnix() {
+        return !isWindows();
+    }
+
+    public static String convertPath(String fromPath) {
+        if(isUnix()) {
+            return fromPath.replaceAll("\\\\", "/");
+        }
+        return fromPath.replaceAll("/", "\\\\");
+    }
 }

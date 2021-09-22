@@ -10,6 +10,7 @@ public class TestRequestModel extends DataModel {
     private static String TIME_REQUESTED_PATH = "timeRequested";
     private static String TAG_EXPRESSION_PATH = "tagExpression";
     private static String BRANCH_PATH = "branch";
+    private static String CONFIGURATION_FILE_PATH = "configurationFile";
     private static String CONFIGURATION_PATH = "configuration";
     private static String PROPERTIES_FILE_PATH = CONFIGURATION_PATH + "[" + REPLACEABLE + "].propertiesFile";
     private static String PROPERTIES_PATH = CONFIGURATION_PATH + "[" + REPLACEABLE + "].properties";
@@ -66,6 +67,10 @@ public class TestRequestModel extends DataModel {
 
     public String getBranch() {
         return this.getString(BRANCH_PATH);
+    }
+
+    public String getConfigurationFile() {
+        return this.getString(CONFIGURATION_FILE_PATH);
     }
 
     public int getConfigurationSize() {

@@ -157,6 +157,22 @@ public class TestExecutor implements Listener {
             return;
         }
         try {
+            scriptProcessor.addLine("cd " + cloneToDirectory);
+        } catch (Throwable t) {
+            testResponseModel.setStatus("error");
+            testResponseModel.setStatusMessage("Unable to build Change Directory Command for '" + cloneToDirectory + "': " + t.getMessage());
+            this.abendWriteTestResponse(t, "Unable to build Change Directory Command for '" + cloneToDirectory + "'", testResponseModel);
+            return;
+        }
+        String branch = null;
+        try {
+            branch = testRequestModel.getBranch();
+            logger.info(this.guid, "Using branch '" + branch + "'");
+            scriptProcessor.addLine("git checkout " + branch);
+        } catch (Throwable t) {
+            logger.info(this.guid, "Using default branch");
+        }
+        try {
             scriptProcessor.run();
         } catch (Throwable t) {
             testResponseModel.setStatus("error");
@@ -183,7 +199,7 @@ public class TestExecutor implements Listener {
         logger.info(this.guid, "Repository Cloned successfully");
         File cloneStdoutFile = scriptProcessor.getStdoutFile();
         //
-        // Override any parameters in files specificed by the Test Request
+        // Override any parameters in files specified by the Test Request
         //
         logger.info(this.guid, "Overriding any parameters");
         this.overrideParameters(testRequestModel, clonedDirectoryFull);
@@ -193,13 +209,12 @@ public class TestExecutor implements Listener {
         logger.info(this.guid, "Building script to perform tests");
         scriptProcessor = new ScriptProcessor();
         scriptProcessor.setWorkingDirectory(clonedDirectory);
-        String branch = null;
+        String configurationFile = null;
         try {
-            branch = testRequestModel.getBranch();
-            logger.info(this.guid, "Using branch '" + branch + "'");
-            scriptProcessor.addLine("git checkout " + branch);
+            configurationFile = testRequestModel.getConfigurationFile();
+            logger.info(this.guid, "Using Configuration File '" + configurationFile + "'");
         } catch (Throwable t) {
-            logger.info(this.guid, "Using default branch");
+            logger.info(this.guid, "Using default Configuration File");
         }
         String tagExpression = null;
         try {
@@ -213,7 +228,11 @@ public class TestExecutor implements Listener {
             return;
         }
         scriptProcessor.addLine("mvn compile");
-        scriptProcessor.addLine("./runtests.sh @api-1");
+        String command = "./runtests.sh \"" + tagExpression + "\"";
+        if(configurationFile!=null) {
+            command += " " + configurationFile;
+        }
+        scriptProcessor.addLine(command);
         logger.info(this.guid, "Executing script to run tests");
         try {
             scriptProcessor.run();
@@ -297,6 +316,7 @@ public class TestExecutor implements Listener {
             logger.error(this.guid, "Unable to determine repo config directory: " + t.getMessage());
             return;
         }
+        configFileDirectory = Util.convertPath(configFileDirectory);
         int fileEntries = 0;
         try {
             fileEntries = testRequestModel.getConfigurationSize();

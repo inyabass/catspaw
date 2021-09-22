@@ -113,7 +113,7 @@ public class ScriptProcessor {
     }
 
     private String getBash(Map<String, String> environment) {
-        if(!System.getProperty("os.name").toLowerCase().contains("windows")) {
+        if(Util.isUnix()) {
             return "bash";
         }
         return "C:\\Program Files\\Git\\bin\\bash";

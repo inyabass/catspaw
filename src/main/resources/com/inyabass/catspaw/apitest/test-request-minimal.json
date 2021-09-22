@@ -1,7 +1,17 @@
 {
   "requestor": "mark",
-  "tagExpression": "@api-1",
+  "tagExpression": "@configtest",
   "branch": "develop",
+  "configurationFile": "src/main/resources/com/inyabass/cats/config/selenium.properties",
+  "configuration": [
+    {
+      "propertiesFile": "selenium.properties",
+      "properties": {
+        "ITEM": "was overridden",
+        "NEW": "A new Property"
+      }
+    }
+  ],
   "targets": [
     {
       "target": "database",
