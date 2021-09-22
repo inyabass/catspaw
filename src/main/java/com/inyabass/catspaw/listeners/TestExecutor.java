@@ -77,6 +77,10 @@ public class TestExecutor implements Listener {
         String workingDirectory = null;
         try {
             workingDirectory = ConfigReader.get(ConfigProperties.SCRIPTPROCESSOR_WORKING_DIRECTORY);
+            if(workingDirectory.toUpperCase().equals("$RANDOM")) {
+                workingDirectory = "cats" + String.valueOf(System.currentTimeMillis()) + "_" + Util.getGuid();
+                logger.info(this.guid, "Using Random Working Directory: " + workingDirectory);
+            }
         } catch (Throwable t) {
             testResponseModel.setStatus("error");
             testResponseModel.setStatusMessage("Unable to determine working directory: " + t.getMessage());

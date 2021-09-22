@@ -56,7 +56,7 @@ public class ScriptProcessor {
             logger.error("No script lines to process");
             return;
         }
-        String scriptFileName = System.getProperty("java.io.tmpdir") + "catspaw-" + System.currentTimeMillis() + ".sh";
+        String scriptFileName = System.getProperty("java.io.tmpdir") + "catspaw-" + System.currentTimeMillis() + Util.getGuid() + ".sh";
         logger.debug("Creating temp script " + scriptFileName);
         Path scriptFilePath = Paths.get(scriptFileName);
         if(Files.exists(scriptFilePath)) {

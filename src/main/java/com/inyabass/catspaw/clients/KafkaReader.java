@@ -56,9 +56,11 @@ public class KafkaReader {
     public void pollLoop() {
         while(true) {
             ConsumerRecords<String, String> consumerRecords = this.kafkaConsumer.poll(this.pollDuration);
+            this.kafkaConsumer.commitSync();
+            if(consumerRecords.count()>0) {
+                logger.info("Processing " + consumerRecords.count() + " Consumer Records");
+            }
             for(ConsumerRecord<String, String> consumerRecord: consumerRecords) {
-                this.kafkaConsumer.commitSync();
-//                this.kafkaConsumer.pause();
                 this.listener.processRecord(consumerRecord);
             }
         }
