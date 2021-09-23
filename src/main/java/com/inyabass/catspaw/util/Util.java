@@ -17,7 +17,7 @@ import java.util.zip.ZipOutputStream;
 
 public class Util {
 
-    final static Logger logger = new Logger(MethodHandles.lookup().lookupClass());
+    private final static Logger logger = new Logger(MethodHandles.lookup().lookupClass());
 
     public final static SimpleDateFormat STANDARD_DATE_FORMAT = new SimpleDateFormat("yyyyMMdd-HH:mm:ss");
     public final static SimpleDateFormat SPRING_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");

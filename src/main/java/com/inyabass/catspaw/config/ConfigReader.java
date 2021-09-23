@@ -24,8 +24,11 @@ public class ConfigReader {
 
     private static Properties properties = null;
     private static ArrayList<String> paths = new ArrayList<>();
+    private static boolean resolveEnvironmentVariables = true;
 
     public static void main(String[] args) throws Throwable {
+        String s = get("bootstrap.servers");
+        int i = 0;
     }
 
     public static void ConfigReader() throws Throwable {
@@ -79,10 +82,16 @@ public class ConfigReader {
                 ConfigReader.mergeInWithOverride(propertiesToMerge);
             }
         }
+        try {
+            String crev = ConfigReader.get("configreader.resolve.environment.variables");
+            ConfigReader.setResolveEnvironmentVariables(Boolean.parseBoolean(crev));
+        } catch (Throwable t) {
+            // Ignore
+        }
     }
 
     public static boolean exists(String property) throws Throwable {
-        if(System.getenv(property.toUpperCase().replaceAll("\\.", "_"))!=null) {
+        if(ConfigReader.resolveEnvironmentVariables&&System.getenv(property.toUpperCase().replaceAll("\\.", "_"))!=null) {
             return true;
         }
         return existsInternal(property);
@@ -94,21 +103,21 @@ public class ConfigReader {
     }
 
     public static String get(String property) throws Throwable {
-        if(System.getenv(property.toUpperCase().replaceAll("\\.", "_"))!=null) {
+        if(ConfigReader.resolveEnvironmentVariables&&System.getenv(property.toUpperCase().replaceAll("\\.", "_"))!=null) {
             String value = System.getenv(property.toUpperCase().replaceAll("\\.", "_"));
             if(value.startsWith("$e:")) {
-                return decode(value.substring(3));
+                return Resolver.resolve(decode(value.substring(3)));
             } else {
-                return value;
+                return Resolver.resolve(value);
             }
         }
         ConfigReader.checkAndLoadProperties();
         if(ConfigReader.existsInternal(property)) {
             String value = (String) ConfigReader.properties.get(property);
             if(value.startsWith("$e:")) {
-                return decode(value.substring(3));
+                return Resolver.resolve(decode(value.substring(3)));
             } else {
-                return value;
+                return Resolver.resolve(value);
             }
         }
         Assert.fail("Property '" + property + "' does not exist in Config");
@@ -152,5 +161,9 @@ public class ConfigReader {
     private static String decode(String encoded) {
         Base64.Decoder decoder = Base64.getDecoder();
         return new String(decoder.decode(encoded.getBytes()), StandardCharsets.UTF_8);
+    }
+
+    public static void setResolveEnvironmentVariables(boolean value) {
+        ConfigReader.resolveEnvironmentVariables = value;
     }
 }
