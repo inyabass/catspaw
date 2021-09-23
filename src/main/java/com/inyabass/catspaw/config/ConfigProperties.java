@@ -21,6 +21,7 @@ public class ConfigProperties {
     public static final String CLIENT_ID = "client.id";
     public static final String GROUP_ID = "group.id";
     public static final String TEST_REQUEST_LISTENER_GROUP_ID = "test.request.listener.group.id";
+    public static final String TEST_RESPONSE_LISTENER_GROUP_ID = "test.response.listener.group.id";
     public static final String POLL_DURATION = "poll.duration";
     public static final String ENABLE_AUTO_COMMIT = "enable.auto.commit";
     public static final String MAX_POLL_RECORDS = "max.poll.records";
@@ -39,6 +40,10 @@ public class ConfigProperties {
     public static final String GIT_CLONE_TO_DIRECTORY = "git.clone.to.directory";
     public static final String CONFIG_DIRECTORY = "repo.config.directory";
     public static final String JSON_FILE_LOCATION = "json.file.location";
+    public static final String TESTEXECUTOR_DEBUG = "testexecutor.debug";
+
+    // TestResponser
+    public static final String TESTRESPONDER_DEBUG = "testresponder.debug";
 
     // AWS S3
     public static final String AWS_BUCKET_NAME = "aws.bucket.name";

@@ -67,7 +67,6 @@ public class ConfigReader {
         }
         logger.debug("Loading first config file from: " + ConfigReader.paths.get(0).trim());
         InputStream inputStream = new FileInputStream(new File(ConfigReader.paths.get(0).trim()));
-        FileInputStream f = null;
         Assert.assertNotNull("Invalid Configuration file: " + ConfigReader.paths.get(0).trim(), inputStream);
         ConfigReader.properties.load(inputStream);
         if(ConfigReader.paths.size() > 1) {
@@ -83,13 +82,28 @@ public class ConfigReader {
     }
 
     public static boolean exists(String property) throws Throwable {
+        if(System.getenv(property.toUpperCase().replaceAll("\\.", "_"))!=null) {
+            return true;
+        }
+        return existsInternal(property);
+    }
+
+    private static boolean existsInternal(String property) throws Throwable {
         ConfigReader.checkAndLoadProperties();
         return ConfigReader.properties.containsKey(property);
     }
 
     public static String get(String property) throws Throwable {
+        if(System.getenv(property.toUpperCase().replaceAll("\\.", "_"))!=null) {
+            String value = System.getenv(property.toUpperCase().replaceAll("\\.", "_"));
+            if(value.startsWith("$e:")) {
+                return decode(value.substring(3));
+            } else {
+                return value;
+            }
+        }
         ConfigReader.checkAndLoadProperties();
-        if(ConfigReader.exists(property)) {
+        if(ConfigReader.existsInternal(property)) {
             String value = (String) ConfigReader.properties.get(property);
             if(value.startsWith("$e:")) {
                 return decode(value.substring(3));
@@ -103,7 +117,7 @@ public class ConfigReader {
 
     public static void set(String property, String value) throws Throwable {
         ConfigReader.checkAndLoadProperties();
-        if(ConfigReader.exists(property)) {
+        if(ConfigReader.existsInternal(property)) {
             ConfigReader.properties.replace(property, value);
         } else {
             ConfigReader.properties.put(property, value);

@@ -4,6 +4,6 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 public interface Listener {
 
-    public void processRecord(ConsumerRecord<String, String> record);
+    public void processRecord(ConsumerRecord<String, String> consumerRecord);
 
 }

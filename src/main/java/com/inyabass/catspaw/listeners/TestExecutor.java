@@ -22,6 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
@@ -29,13 +30,29 @@ public class TestExecutor implements Listener {
 
     final static Logger logger = new Logger(MethodHandles.lookup().lookupClass());
 
+    private boolean debug = false;
     private String guid = null;
     private String inputJson = null;
     private KafkaWriter kafkaWriter = new KafkaWriter();
+    private List<String> tempFiles = new ArrayList<>();
 
     public TestExecutor() throws Throwable {
         logger.info("TestExecutor starting");
         ConfigReader.ConfigReader();
+        String debugString = "false";
+        try {
+            debugString = ConfigReader.get(ConfigProperties.TESTEXECUTOR_DEBUG);
+        } catch (Throwable t) {
+        }
+        if(debugString!=null) {
+            try {
+                this.debug = Boolean.parseBoolean(debugString);
+            } catch (Throwable t) {
+            }
+        }
+        if(this.debug) {
+            logger.info("Debug Enabled");
+        }
     }
 
     public static void main(String[] args) throws Throwable {
@@ -48,9 +65,13 @@ public class TestExecutor implements Listener {
     }
 
     public void processRecord(ConsumerRecord<String, String> consumerRecord) {
+        this.tempFiles = new ArrayList<>();
         this.guid = consumerRecord.key();
         this.inputJson = consumerRecord.value();
         this.process();
+        if(!this.debug) {
+            this.cleanUpTempFiles();
+        }
     }
 
     public void process() {
@@ -110,6 +131,9 @@ public class TestExecutor implements Listener {
                 return;
             } else {
                 logger.info(this.guid, "Working Directory " + workingDirectoryFull + " Cleared");
+            }
+            if(!this.debug) {
+                this.tempFiles.add(scriptProcessor.getStdoutFile().getAbsolutePath());
             }
         } else {
             try {
@@ -193,6 +217,9 @@ public class TestExecutor implements Listener {
             this.abendWriteTestResponse(null, "Unable to clear working directory: " + scriptProcessor.getExitValue(), testResponseModel);
             return;
         }
+        if(!this.debug) {
+            this.tempFiles.add(scriptProcessor.getStdoutFile().getAbsolutePath());
+        }
         logger.info(this.guid, "Checking cloned directory exists");
         String clonedDirectory = workingDirectory + ScriptProcessor.fs + cloneToDirectory;
         String clonedDirectoryFull = workingDirectoryFull + ScriptProcessor.fs + cloneToDirectory;
@@ -267,6 +294,9 @@ public class TestExecutor implements Listener {
             testResponseModel.setStatusMessage("Non-Zero exit code from script to execute tests: " + scriptProcessor.getExitValue());
         }
         logger.info(this.guid, "Test Script Execution Complete");
+        if(!this.debug) {
+            this.tempFiles.add(scriptProcessor.getStdoutFile().getAbsolutePath());
+        }
         File execStdoutFile = scriptProcessor.getStdoutFile();
         //
         // Capture outout JSON and write to S3
@@ -446,6 +476,15 @@ public class TestExecutor implements Listener {
                 throw t;
             }
             logger.info(this.guid, "Stdout file(s) written to AWS S3");
+            if(!this.debug) {
+                this.tempFiles.add(S3ZippedStdListFile.getAbsolutePath());
+                if(cloneStdoutFile!=null) {
+                    this.tempFiles.add(cloneStdoutFile.getAbsolutePath());
+                }
+                if(execStdoutFile!=null) {
+                    this.tempFiles.add(execStdoutFile.getAbsolutePath());
+                }
+            }
         }
         if(jsonFile!=null) {
             logger.info(this.guid, "Writing JSON log file to AWS S3");
@@ -477,6 +516,9 @@ public class TestExecutor implements Listener {
                 throw t;
             }
             logger.info(this.guid, "JSON log file written to AWS S3");
+            if(!this.debug) {
+                this.tempFiles.add(jsonFile.getAbsolutePath());
+            }
         }
     }
 
@@ -493,5 +535,19 @@ public class TestExecutor implements Listener {
             throw t;
         }
         awsS3Client.putObject(file);
+    }
+
+    private void cleanUpTempFiles() {
+        logger.info(this.guid, "Cleaning up Temporary Files");
+        for(String file: this.tempFiles) {
+            if(Files.exists(Paths.get(file))) {
+                try {
+                    Files.delete(Paths.get(file));
+                    logger.info(this.guid, "File " + file + " deleted");
+                } catch (Throwable t) {
+                    logger.warn(this.guid, "Unable to delete " + file + " : " + t.getMessage());
+                }
+            }
+        }
     }
 }
