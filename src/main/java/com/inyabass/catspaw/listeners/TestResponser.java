@@ -61,6 +61,7 @@ public class TestResponser implements Listener {
     }
 
     public void process() {
+        logger.info(this.guid, "Start Processing " + this.inputJson);
     }
 
     private void cleanUpTempFiles() {
