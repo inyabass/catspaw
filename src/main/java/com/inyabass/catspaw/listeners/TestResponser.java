@@ -22,6 +22,10 @@ public class TestResponser implements Listener {
     private String inputJson = null;
     private List<String> tempFiles = new ArrayList<>();
 
+    private static final String PRODUCE_REPORT = "report";
+    private static final String PRODUCE_EMAIL = "email";
+    private static final String POST_TO_TEAMS = "teams";
+
     public TestResponser() throws Throwable {
         logger.info("TestExecutor starting");
         ConfigReader.ConfigReader();
@@ -62,6 +66,9 @@ public class TestResponser implements Listener {
 
     public void process() {
         logger.info(this.guid, "Start Processing " + this.inputJson);
+        // Produce Report & upload to S3 if requested
+        // Send email if requested with link to report in S3
+        // Post teams notification if requested with link to report in S3
     }
 
     private void cleanUpTempFiles() {
