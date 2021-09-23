@@ -42,6 +42,8 @@ public class ConfigProperties {
 
     // AWS S3
     public static final String AWS_BUCKET_NAME = "aws.bucket.name";
+    public static final String AWS_REPORTING_BUCKET_NAME = "aws.reporting.bucket.name";
+    public static final String AWS_REGION_NAME = "aws.region.name";
     public static final String AWS_ACCESS_KEY = "aws.data.1";
     public static final String AWS_SECRET_KEY = "aws.data.2";
 }

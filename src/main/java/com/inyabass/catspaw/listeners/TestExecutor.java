@@ -15,6 +15,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.lang.invoke.MethodHandles;
 import java.nio.file.Files;
@@ -184,7 +185,11 @@ public class TestExecutor implements Listener {
         if(scriptProcessor.getExitValue()!=0) {
             testResponseModel.setStatus("error");
             testResponseModel.setStatusMessage("Non-Zero exit code from script to clone repo: " + scriptProcessor.getExitValue());
-            this.writeResultsToS3(scriptProcessor.getStdoutFile(), null, null, testResponseModel);
+            try {
+                this.writeResultsToS3(scriptProcessor.getStdoutFile(), null, null, testResponseModel);
+            } catch (Throwable t2) {
+                logger.error(this.guid, "Unable to Write to Amazon S3: " + t2.getMessage());
+            }
             this.abendWriteTestResponse(null, "Unable to clear working directory: " + scriptProcessor.getExitValue(), testResponseModel);
             return;
         }
@@ -194,7 +199,11 @@ public class TestExecutor implements Listener {
         if(!Files.exists(Paths.get(clonedDirectoryFull))) {
             testResponseModel.setStatus("error");
             testResponseModel.setStatusMessage("Clone-to Directory not found - Repo was not cloned successfully");
-            this.writeResultsToS3(scriptProcessor.getStdoutFile(), null, null, testResponseModel);
+            try {
+                this.writeResultsToS3(scriptProcessor.getStdoutFile(), null, null, testResponseModel);
+            } catch (Throwable t2) {
+                logger.error(this.guid, "Unable to Write to Amazon S3: " + t2.getMessage());
+            }
             return;
         }
         logger.info(this.guid, "Repository Cloned successfully");
@@ -224,7 +233,11 @@ public class TestExecutor implements Listener {
         } catch (Throwable t) {
             testResponseModel.setStatus("error");
             testResponseModel.setStatusMessage("Cannot determine tagExpression: " + t.getMessage());
-            this.writeResultsToS3(cloneStdoutFile, null, null, testResponseModel);
+            try {
+                this.writeResultsToS3(cloneStdoutFile, null, null, testResponseModel);
+            } catch (Throwable t2) {
+                logger.error(this.guid, "Unable to Write to Amazon S3: " + t2.getMessage());
+            }
             this.abendWriteTestResponse(t, "Cannot determine tagExpression", testResponseModel);
             return;
         }
@@ -240,7 +253,11 @@ public class TestExecutor implements Listener {
         } catch (Throwable t) {
             testResponseModel.setStatus("error");
             testResponseModel.setStatusMessage("Could not execute script to execute tests: " + t.getMessage());
-            this.writeResultsToS3(cloneStdoutFile, scriptProcessor.getStdoutFile(), null, testResponseModel);
+            try {
+                this.writeResultsToS3(cloneStdoutFile, scriptProcessor.getStdoutFile(), null, testResponseModel);
+            } catch (Throwable t2) {
+                logger.error(this.guid, "Unable to Write to Amazon S3: " + t2.getMessage());
+            }
             this.abendWriteTestResponse(t, "Could not execute script to execute tests", testResponseModel);
             return;
         }
@@ -261,7 +278,11 @@ public class TestExecutor implements Listener {
         } catch (Throwable t) {
             testResponseModel.setStatus("error");
             testResponseModel.setStatusMessage("Could not determine output json filename: " + t.getMessage());
-            this.writeResultsToS3(cloneStdoutFile, execStdoutFile, null, testResponseModel);
+            try {
+                this.writeResultsToS3(cloneStdoutFile, execStdoutFile, null, testResponseModel);
+            } catch (Throwable t2) {
+                logger.error(this.guid, "Unable to Write to Amazon S3: " + t2.getMessage());
+            }
             this.abendWriteTestResponse(t, "Could not determine output json filename", testResponseModel);
             return;
         }
@@ -278,8 +299,8 @@ public class TestExecutor implements Listener {
             this.writeResultsToS3(cloneStdoutFile, execStdoutFile, jsonOutputFile, testResponseModel);
         } catch (Throwable t) {
             testResponseModel.setStatus("error");
-            testResponseModel.setStatusMessage("Could not Write: " + t.getMessage());
-            this.abendWriteTestResponse(t, "Could not determine output json filename", testResponseModel);
+            testResponseModel.setStatusMessage("Could not Write Results to S3: " + t.getMessage());
+            this.abendWriteTestResponse(t, "Could not Write Results to S3", testResponseModel);
             return;
         }
         //
@@ -293,6 +314,7 @@ public class TestExecutor implements Listener {
             this.abendMessage(t, "Unable to Write to test-response");
             return;
         }
+        logger.error(this.guid, "End Processing - SUCCESS");
     }
 
     private void abendMessage(Throwable t, String message) {
@@ -329,6 +351,7 @@ public class TestExecutor implements Listener {
         try {
             fileEntries = testRequestModel.getConfigurationSize();
         } catch (Throwable t) {
+            logger.warn(this.guid, "Could not get the number of Configuration File Entries");
             return;
         }
         if(fileEntries==0) {
@@ -344,7 +367,7 @@ public class TestExecutor implements Listener {
             }
             String propertiesFileFull = clonedDirectory + ScriptProcessor.fs + configFileDirectory + ScriptProcessor.fs + propertiesFile;
             if(!Files.exists(Paths.get(propertiesFileFull))) {
-                logger.error("Properties File does not exist in repo: " + propertiesFile);
+                logger.warn("Properties File does not exist in repo: " + propertiesFile);
                 continue;
             }
             int itemEntries = 0;
@@ -360,7 +383,7 @@ public class TestExecutor implements Listener {
             try {
                 properties.load(new FileInputStream(new File(propertiesFileFull)));
             } catch (Throwable t) {
-                logger.error(this.guid, "Unable to read or parse Configuration file " + propertiesFile + ": " + t.getMessage());
+                logger.warn(this.guid, "Unable to read or parse Configuration file " + propertiesFile + ": " + t.getMessage());
                 continue;
             }
             for(String propertyName: propertiesList) {
@@ -374,7 +397,7 @@ public class TestExecutor implements Listener {
             try {
                 properties.store(new FileOutputStream(new File(propertiesFileFull)), "Updated");
             } catch (Throwable t) {
-                logger.error(this.guid, "Unable to rewrite properties file " + propertiesFile + " :" + t.getMessage());
+                logger.warn(this.guid, "Unable to rewrite properties file " + propertiesFile + " :" + t.getMessage());
             }
         }
     }
@@ -460,13 +483,15 @@ public class TestExecutor implements Listener {
     private void writeFileToS3(File file) throws Throwable {
         if(!file.exists()) {
             logger.warn(this.guid, "Could not find file to write to S3: " + file.getName());
-            return;
+            throw new FileNotFoundException("Could not find file to write to S3: " + file.getName());
         }
+        AwsS3Client awsS3Client = null;
         try {
-            AwsS3Client awsS3Client = new AwsS3Client();
+            awsS3Client = new AwsS3Client();
         } catch (Throwable t) {
-            logger.error(this.guid, "Unable to create Amazon S3 Client Client");
+            logger.error(this.guid, "Unable to create Amazon S3 Client");
             throw t;
         }
+        awsS3Client.putObject(file);
     }
 }
