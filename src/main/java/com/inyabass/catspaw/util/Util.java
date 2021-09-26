@@ -1,9 +1,11 @@
 package com.inyabass.catspaw.util;
 
+import com.inyabass.catspaw.clients.AwsS3Client;
 import com.inyabass.catspaw.logging.Logger;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.lang.invoke.MethodHandles;
 import java.nio.file.Files;
@@ -11,6 +13,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -149,5 +152,48 @@ public class Util {
             return fromPath.replaceAll("\\\\", "/");
         }
         return fromPath.replaceAll("/", "\\\\");
+    }
+
+    public static String getTemp() {
+        String tempDir = System.getProperty("java.io.tmpdir");
+        if(Util.isWindows()) {
+            if(!tempDir.endsWith("\\")) {
+                tempDir += "\\";
+            }
+        } else {
+            if(!tempDir.endsWith("/")) {
+                tempDir += "/";
+            }
+        }
+        return tempDir;
+    }
+
+    public static void writeFileToS3(File file, String reference) throws Throwable {
+        if(!file.exists()) {
+            logger.warn(reference, "Could not find file to write to S3: " + file.getName());
+            throw new FileNotFoundException("Could not find file to write to S3: " + file.getName());
+        }
+        AwsS3Client awsS3Client = null;
+        try {
+            awsS3Client = new AwsS3Client();
+        } catch (Throwable t) {
+            logger.error(reference, "Unable to create Amazon S3 Client");
+            throw t;
+        }
+        awsS3Client.putObject(file);
+    }
+
+    public static void cleanUpTempFiles(List<String> tempFiles, String reference) {
+        logger.info(reference, "Cleaning up Temporary Files");
+        for (String file : tempFiles) {
+            if (Files.exists(Paths.get(file))) {
+                try {
+                    Files.delete(Paths.get(file));
+                    logger.info(reference, "File " + file + " deleted");
+                } catch (Throwable t) {
+                    logger.warn(reference, "Unable to delete " + file + " : " + t.getMessage());
+                }
+            }
+        }
     }
 }

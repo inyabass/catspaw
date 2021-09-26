@@ -70,7 +70,7 @@ public class TestExecutor implements Listener {
         this.inputJson = consumerRecord.value();
         this.process();
         if(!this.debug) {
-            this.cleanUpTempFiles();
+            Util.cleanUpTempFiles(this.tempFiles, this.guid);
         }
     }
 
@@ -111,11 +111,7 @@ public class TestExecutor implements Listener {
             return;
         }
         String workingDirectoryFull = null;
-        if (Util.isWindows()) {
-            workingDirectoryFull = System.getProperty("java.io.tmpdir") + workingDirectory;
-        } else {
-            workingDirectoryFull = System.getProperty("java.io.tmpdir") + "/" + workingDirectory;
-        }
+        workingDirectoryFull = Util.getTemp() + workingDirectory;
         if(Files.exists(Paths.get(workingDirectoryFull))) {
             logger.info(guid, "Working Directory " + workingDirectoryFull + " exists - clearing");
             ScriptProcessor scriptProcessor = new ScriptProcessor();
@@ -439,16 +435,12 @@ public class TestExecutor implements Listener {
 
     private void writeResultsToS3(File cloneStdoutFile, File execStdoutFile, File jsonFile, TestResponseModel testResponseModel) throws Throwable {
         logger.info(this.guid, "Writing results to AWS S3 Bucket");
-        String tempDir = System.getProperty("java.io.tmpdir");
+        String tempDir = Util.getTemp();
         if (cloneStdoutFile != null || execStdoutFile != null) {
             logger.info(this.guid, "Writing stdout file(s) to AWS S3");
             String stdListFileName = this.guid + "_stdlist.log";
             String stdListFileNameFull = null;
-            if(Util.isWindows()) {
-                stdListFileNameFull = tempDir + stdListFileName;
-            } else {
-                stdListFileNameFull = tempDir + "/" + stdListFileName;
-            }
+            stdListFileNameFull = tempDir + stdListFileName;
             Path stdListPath = Paths.get(stdListFileNameFull);
             try {
                 if (Files.exists(stdListPath)) {
@@ -480,7 +472,7 @@ public class TestExecutor implements Listener {
             File S3ZippedStdListFile = Util.zipInPlace(stdListPath.toFile());
             testResponseModel.addStdout(S3ZippedStdListFile.getName());
             try {
-                this.writeFileToS3(S3ZippedStdListFile);
+                Util.writeFileToS3(S3ZippedStdListFile, this.guid);
             } catch (Throwable t) {
                 logger.error(this.guid, "Unable to Write Stdout File(s) to AWS S3");
                 throw t;
@@ -525,7 +517,7 @@ public class TestExecutor implements Listener {
             File S3ZippedJsonFile = Util.zipInPlace(jsonPath.toFile());
             testResponseModel.addResultJson(S3ZippedJsonFile.getName());
             try {
-                this.writeFileToS3(S3ZippedJsonFile);
+                Util.writeFileToS3(S3ZippedJsonFile, this.guid);
             } catch (Throwable t) {
                 logger.error(this.guid, "Unable to Write JSON Log File to AWS S3");
                 throw t;
@@ -533,35 +525,6 @@ public class TestExecutor implements Listener {
             logger.info(this.guid, "JSON log file written to AWS S3");
             if(!this.debug) {
                 this.tempFiles.add(jsonFile.getAbsolutePath());
-            }
-        }
-    }
-
-    private void writeFileToS3(File file) throws Throwable {
-        if(!file.exists()) {
-            logger.warn(this.guid, "Could not find file to write to S3: " + file.getName());
-            throw new FileNotFoundException("Could not find file to write to S3: " + file.getName());
-        }
-        AwsS3Client awsS3Client = null;
-        try {
-            awsS3Client = new AwsS3Client();
-        } catch (Throwable t) {
-            logger.error(this.guid, "Unable to create Amazon S3 Client");
-            throw t;
-        }
-        awsS3Client.putObject(file);
-    }
-
-    private void cleanUpTempFiles() {
-        logger.info(this.guid, "Cleaning up Temporary Files");
-        for (String file : this.tempFiles) {
-            if (Files.exists(Paths.get(file))) {
-                try {
-                    Files.delete(Paths.get(file));
-                    logger.info(this.guid, "File " + file + " deleted");
-                } catch (Throwable t) {
-                    logger.warn(this.guid, "Unable to delete " + file + " : " + t.getMessage());
-                }
             }
         }
     }

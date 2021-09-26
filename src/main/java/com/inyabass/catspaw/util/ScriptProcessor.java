@@ -57,11 +57,7 @@ public class ScriptProcessor {
             return;
         }
         String scriptFileName = null;
-        if (Util.isWindows()) {
-            scriptFileName = System.getProperty("java.io.tmpdir") + "catspaw-" + System.currentTimeMillis() + Util.getGuid() + ".sh";
-        } else {
-            scriptFileName = System.getProperty("java.io.tmpdir") + "/" + "catspaw-" + System.currentTimeMillis() + Util.getGuid() + ".sh";
-        }
+        scriptFileName = Util.getTemp() + "catspaw-" + System.currentTimeMillis() + Util.getGuid() + ".sh";
         logger.debug("Creating temp script " + scriptFileName);
         Path scriptFilePath = Paths.get(scriptFileName);
         if(Files.exists(scriptFilePath)) {
@@ -82,10 +78,10 @@ public class ScriptProcessor {
             }
         }
         fileWriter.close();
-        String workingDirectoryName = System.getProperty("java.io.tmpdir");
+        String workingDirectoryName = Util.getTemp();
         Path dirPath = Paths.get(workingDirectoryName);;
         if(this.workingDirectory!=null&&!this.workingDirectory.equals("")) {
-            workingDirectoryName += fs + this.workingDirectory;
+            workingDirectoryName += this.workingDirectory;
             dirPath = Paths.get(workingDirectoryName);
             if(!Files.exists(dirPath)) {
                 Files.createDirectories(dirPath);
@@ -99,12 +95,12 @@ public class ScriptProcessor {
             processBuilder.directory(dirPath.toFile());
             processBuilder.command(this.getBash(environment), scriptFileName);
             process = processBuilder.start();
-            process.waitFor();
+            boolean alive = process.isAlive();
+            Thread.sleep(100);
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String outputFileName = System.getProperty("java.io.tmpdir") + fs + "catsrunlog-" + System.currentTimeMillis() + ".log";
+            String outputFileName = Util.getTemp() + "catsrunlog-" + System.currentTimeMillis() + ".log";
             fileWriter = new FileWriter(outputFileName);
             String line = null;
-            logger.debug("Script stdout");
             while ((line = reader.readLine()) != null) {
                 logger.debug(line);
                 fileWriter.write(line + "\n");
