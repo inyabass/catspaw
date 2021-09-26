@@ -1,6 +1,9 @@
 package com.inyabass.catspaw.util;
 
 import com.inyabass.catspaw.clients.AwsS3Client;
+import com.inyabass.catspaw.config.ConfigProperties;
+import com.inyabass.catspaw.config.ConfigReader;
+import com.inyabass.catspaw.data.TestRequestModel;
 import com.inyabass.catspaw.logging.Logger;
 
 import java.io.File;
@@ -14,6 +17,7 @@ import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Properties;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -193,6 +197,70 @@ public class Util {
                 } catch (Throwable t) {
                     logger.warn(reference, "Unable to delete " + file + " : " + t.getMessage());
                 }
+            }
+        }
+    }
+
+    public static void overrideParameters(TestRequestModel testRequestModel, String clonedDirectory, String reference) {
+        String configFileDirectory = null;
+        try {
+            configFileDirectory = ConfigReader.get(ConfigProperties.CONFIG_DIRECTORY);
+        } catch (Throwable t) {
+            logger.error(reference, "Unable to determine repo config directory: " + t.getMessage());
+            return;
+        }
+        configFileDirectory = Util.convertPath(configFileDirectory);
+        int fileEntries = 0;
+        try {
+            fileEntries = testRequestModel.getConfigurationSize();
+        } catch (Throwable t) {
+            logger.warn(reference, "Could not get the number of Configuration File Entries");
+            return;
+        }
+        if(fileEntries==0) {
+            return;
+        }
+        for(int i = 0;i<fileEntries;i++) {
+            String propertiesFile = null;
+            try {
+                propertiesFile = testRequestModel.getPropertiesFile(i);
+            } catch (Throwable t) {
+                logger.error(reference, "No Properties File Specified");
+                continue;
+            }
+            String propertiesFileFull = clonedDirectory + ScriptProcessor.fs + configFileDirectory + ScriptProcessor.fs + propertiesFile;
+            if(!Files.exists(Paths.get(propertiesFileFull))) {
+                logger.warn(reference, "Properties File does not exist in repo: " + propertiesFile);
+                continue;
+            }
+            int itemEntries = 0;
+            List<String> propertiesList = null;
+            try {
+                propertiesList = testRequestModel.getPropertiesList(i);
+                itemEntries = propertiesList.size();
+            } catch (Throwable t) {
+                logger.warn(reference, "For file " + propertiesFile + " no config items were specified");
+                continue;
+            }
+            Properties properties = new Properties();
+            try {
+                properties.load(new FileInputStream(new File(propertiesFileFull)));
+            } catch (Throwable t) {
+                logger.warn(reference, "Unable to read or parse Configuration file " + propertiesFile + ": " + t.getMessage());
+                continue;
+            }
+            for(String propertyName: propertiesList) {
+                String propertyValue = testRequestModel.getProperty(i, propertyName);
+                if(properties.containsKey(propertyName)) {
+                    properties.setProperty(propertyName, propertyValue);
+                } else {
+                    properties.put(propertyName, propertyValue);
+                }
+            }
+            try {
+                properties.store(new FileOutputStream(new File(propertiesFileFull)), "Updated");
+            } catch (Throwable t) {
+                logger.warn(reference, "Unable to rewrite properties file " + propertiesFile + " :" + t.getMessage());
             }
         }
     }

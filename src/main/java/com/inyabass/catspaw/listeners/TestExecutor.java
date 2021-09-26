@@ -240,7 +240,7 @@ public class TestExecutor implements Listener {
         // Override any parameters in files specified by the Test Request
         //
         logger.info(this.guid, "Overriding any parameters");
-        this.overrideParameters(testRequestModel, clonedDirectoryFull);
+        Util.overrideParameters(testRequestModel, clonedDirectoryFull, this.guid);
         //
         // Build and execute Script to perform Testing
         //
@@ -369,69 +369,69 @@ public class TestExecutor implements Listener {
         this.abendMessage(t, message);
     }
 
-    private void overrideParameters(TestRequestModel testRequestModel, String clonedDirectory) {
-        String configFileDirectory = null;
-        try {
-            configFileDirectory = ConfigReader.get(ConfigProperties.CONFIG_DIRECTORY);
-        } catch (Throwable t) {
-            logger.error(this.guid, "Unable to determine repo config directory: " + t.getMessage());
-            return;
-        }
-        configFileDirectory = Util.convertPath(configFileDirectory);
-        int fileEntries = 0;
-        try {
-            fileEntries = testRequestModel.getConfigurationSize();
-        } catch (Throwable t) {
-            logger.warn(this.guid, "Could not get the number of Configuration File Entries");
-            return;
-        }
-        if(fileEntries==0) {
-            return;
-        }
-        for(int i = 0;i<fileEntries;i++) {
-            String propertiesFile = null;
-            try {
-                propertiesFile = testRequestModel.getPropertiesFile(i);
-            } catch (Throwable t) {
-                logger.error(this.guid, "No Properties File Specified");
-                continue;
-            }
-            String propertiesFileFull = clonedDirectory + ScriptProcessor.fs + configFileDirectory + ScriptProcessor.fs + propertiesFile;
-            if(!Files.exists(Paths.get(propertiesFileFull))) {
-                logger.warn("Properties File does not exist in repo: " + propertiesFile);
-                continue;
-            }
-            int itemEntries = 0;
-            List<String> propertiesList = null;
-            try {
-                propertiesList = testRequestModel.getPropertiesList(i);
-                itemEntries = propertiesList.size();
-            } catch (Throwable t) {
-                logger.warn(this.guid, "For file " + propertiesFile + " no config items were specified");
-                continue;
-            }
-            Properties properties = new Properties();
-            try {
-                properties.load(new FileInputStream(new File(propertiesFileFull)));
-            } catch (Throwable t) {
-                logger.warn(this.guid, "Unable to read or parse Configuration file " + propertiesFile + ": " + t.getMessage());
-                continue;
-            }
-            for(String propertyName: propertiesList) {
-                String propertyValue = testRequestModel.getProperty(i, propertyName);
-                if(properties.containsKey(propertyName)) {
-                    properties.setProperty(propertyName, propertyValue);
-                } else {
-                    properties.put(propertyName, propertyValue);
-                }
-            }
-            try {
-                properties.store(new FileOutputStream(new File(propertiesFileFull)), "Updated");
-            } catch (Throwable t) {
-                logger.warn(this.guid, "Unable to rewrite properties file " + propertiesFile + " :" + t.getMessage());
-            }
-        }
-    }
+//    private void overrideParameters(TestRequestModel testRequestModel, String clonedDirectory) {
+//        String configFileDirectory = null;
+//        try {
+//            configFileDirectory = ConfigReader.get(ConfigProperties.CONFIG_DIRECTORY);
+//        } catch (Throwable t) {
+//            logger.error(this.guid, "Unable to determine repo config directory: " + t.getMessage());
+//            return;
+//        }
+//        configFileDirectory = Util.convertPath(configFileDirectory);
+//        int fileEntries = 0;
+//        try {
+//            fileEntries = testRequestModel.getConfigurationSize();
+//        } catch (Throwable t) {
+//            logger.warn(this.guid, "Could not get the number of Configuration File Entries");
+//            return;
+//        }
+//        if(fileEntries==0) {
+//            return;
+//        }
+//        for(int i = 0;i<fileEntries;i++) {
+//            String propertiesFile = null;
+//            try {
+//                propertiesFile = testRequestModel.getPropertiesFile(i);
+//            } catch (Throwable t) {
+//                logger.error(this.guid, "No Properties File Specified");
+//                continue;
+//            }
+//            String propertiesFileFull = clonedDirectory + ScriptProcessor.fs + configFileDirectory + ScriptProcessor.fs + propertiesFile;
+//            if(!Files.exists(Paths.get(propertiesFileFull))) {
+//                logger.warn("Properties File does not exist in repo: " + propertiesFile);
+//                continue;
+//            }
+//            int itemEntries = 0;
+//            List<String> propertiesList = null;
+//            try {
+//                propertiesList = testRequestModel.getPropertiesList(i);
+//                itemEntries = propertiesList.size();
+//            } catch (Throwable t) {
+//                logger.warn(this.guid, "For file " + propertiesFile + " no config items were specified");
+//                continue;
+//            }
+//            Properties properties = new Properties();
+//            try {
+//                properties.load(new FileInputStream(new File(propertiesFileFull)));
+//            } catch (Throwable t) {
+//                logger.warn(this.guid, "Unable to read or parse Configuration file " + propertiesFile + ": " + t.getMessage());
+//                continue;
+//            }
+//            for(String propertyName: propertiesList) {
+//                String propertyValue = testRequestModel.getProperty(i, propertyName);
+//                if(properties.containsKey(propertyName)) {
+//                    properties.setProperty(propertyName, propertyValue);
+//                } else {
+//                    properties.put(propertyName, propertyValue);
+//                }
+//            }
+//            try {
+//                properties.store(new FileOutputStream(new File(propertiesFileFull)), "Updated");
+//            } catch (Throwable t) {
+//                logger.warn(this.guid, "Unable to rewrite properties file " + propertiesFile + " :" + t.getMessage());
+//            }
+//        }
+//    }
 
     private void writeResultsToS3(File cloneStdoutFile, File execStdoutFile, File jsonFile, TestResponseModel testResponseModel) throws Throwable {
         logger.info(this.guid, "Writing results to AWS S3 Bucket");
