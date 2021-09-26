@@ -52,11 +52,16 @@ public class ScriptProcessor {
     }
 
     public void run() throws Throwable {
-        if(this.lines.size()==0) {
+        if (this.lines.size() == 0) {
             logger.error("No script lines to process");
             return;
         }
-        String scriptFileName = System.getProperty("java.io.tmpdir") + "catspaw-" + System.currentTimeMillis() + Util.getGuid() + ".sh";
+        String scriptFileName = null;
+        if (Util.isWindows()) {
+            scriptFileName = System.getProperty("java.io.tmpdir") + "catspaw-" + System.currentTimeMillis() + Util.getGuid() + ".sh";
+        } else {
+            scriptFileName = System.getProperty("java.io.tmpdir") + "/" + "catspaw-" + System.currentTimeMillis() + Util.getGuid() + ".sh";
+        }
         logger.debug("Creating temp script " + scriptFileName);
         Path scriptFilePath = Paths.get(scriptFileName);
         if(Files.exists(scriptFilePath)) {
@@ -94,6 +99,7 @@ public class ScriptProcessor {
             processBuilder.directory(dirPath.toFile());
             processBuilder.command(this.getBash(environment), scriptFileName);
             process = processBuilder.start();
+            process.waitFor();
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String outputFileName = System.getProperty("java.io.tmpdir") + fs + "catsrunlog-" + System.currentTimeMillis() + ".log";
             fileWriter = new FileWriter(outputFileName);
@@ -114,7 +120,7 @@ public class ScriptProcessor {
 
     private String getBash(Map<String, String> environment) {
         if(Util.isUnix()) {
-            return "bash";
+            return System.getenv("SHELL");
         }
         return "C:\\Program Files\\Git\\bin\\bash";
     }

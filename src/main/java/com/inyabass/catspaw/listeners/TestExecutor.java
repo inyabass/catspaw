@@ -110,7 +110,12 @@ public class TestExecutor implements Listener {
             this.abendWriteTestResponse(t, "Unable to determine working directory", testResponseModel);
             return;
         }
-        String workingDirectoryFull = System.getProperty("java.io.tmpdir") + workingDirectory;
+        String workingDirectoryFull = null;
+        if (Util.isWindows()) {
+            workingDirectoryFull = System.getProperty("java.io.tmpdir") + workingDirectory;
+        } else {
+            workingDirectoryFull = System.getProperty("java.io.tmpdir") + "/" + workingDirectory;
+        }
         if(Files.exists(Paths.get(workingDirectoryFull))) {
             logger.info(guid, "Working Directory " + workingDirectoryFull + " exists - clearing");
             ScriptProcessor scriptProcessor = new ScriptProcessor();
@@ -438,7 +443,12 @@ public class TestExecutor implements Listener {
         if (cloneStdoutFile != null || execStdoutFile != null) {
             logger.info(this.guid, "Writing stdout file(s) to AWS S3");
             String stdListFileName = this.guid + "_stdlist.log";
-            String stdListFileNameFull = tempDir + stdListFileName;
+            String stdListFileNameFull = null;
+            if(Util.isWindows()) {
+                stdListFileNameFull = tempDir + stdListFileName;
+            } else {
+                stdListFileNameFull = tempDir + "/" + stdListFileName;
+            }
             Path stdListPath = Paths.get(stdListFileNameFull);
             try {
                 if (Files.exists(stdListPath)) {
@@ -489,7 +499,12 @@ public class TestExecutor implements Listener {
         if(jsonFile!=null) {
             logger.info(this.guid, "Writing JSON log file to AWS S3");
             String jsonFileName = this.guid + ".json";
-            String jsonFileNameFull = tempDir + jsonFileName;
+            String jsonFileNameFull = null;
+            if(Util.isWindows()) {
+                jsonFileNameFull = tempDir + jsonFileName;
+            } else {
+                jsonFileNameFull = tempDir + "/" + jsonFileName;
+            }
             Path jsonPath = Paths.get(jsonFileNameFull);
             try {
                 if (Files.exists(jsonPath)) {
@@ -539,8 +554,8 @@ public class TestExecutor implements Listener {
 
     private void cleanUpTempFiles() {
         logger.info(this.guid, "Cleaning up Temporary Files");
-        for(String file: this.tempFiles) {
-            if(Files.exists(Paths.get(file))) {
+        for (String file : this.tempFiles) {
+            if (Files.exists(Paths.get(file))) {
                 try {
                     Files.delete(Paths.get(file));
                     logger.info(this.guid, "File " + file + " deleted");

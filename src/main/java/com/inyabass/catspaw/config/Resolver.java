@@ -4,6 +4,7 @@ import com.inyabass.catspaw.logging.Logger;
 import com.inyabass.catspaw.util.Util;
 
 import java.lang.invoke.MethodHandles;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -88,6 +89,13 @@ public class Resolver {
     }
 
     private static String resolveEnvironmentVariable(String key) {
+        if(key.toUpperCase().equals("HOSTNAME")||key.toUpperCase().equals("COMPUTERNAME")) {
+            try {
+                return InetAddress.getLocalHost().getHostName();
+            } catch (Throwable t) {
+                return Resolver.ENV_VAR_PREFIX + "{" + key + "}";
+            }
+        }
         key = ResolverEnvVarMapping.get(key);
         if(System.getenv(key)!=null) {
             logger.debug("Resolved embedded Environment Variable: '" + key + "' to '" + System.getenv(key));

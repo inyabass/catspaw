@@ -10,7 +10,6 @@ public class ResolverEnvVarMapping {
     private static HashMap<String, String> windowsToUnix = new HashMap<>();
 
     static {
-        add("HOSTNAME", "COMPUTERNAME");
     }
 
     private static void add(String unixValue, String windowsValue) {
