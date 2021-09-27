@@ -28,6 +28,7 @@ public class TestResponder implements Listener {
     private String guid = null;
     private String inputJson = null;
     private List<String> tempFiles = new ArrayList<>();
+    private static String MVN_COMMAND = "mvn --batch-mode";
 
     private static final String PRODUCE_REPORT = "report";
     private static final String PRODUCE_EMAIL = "email";
@@ -232,7 +233,7 @@ public class TestResponder implements Listener {
         }
         String reports = "overview detailed";
         // Get Reports to produce from Test Response if present
-        scriptProcessor.addLine("mvn compile");
+        scriptProcessor.addLine(MVN_COMMAND + " compile");
         String command = "./runreports.sh \"" + reports + "\"";
         if(configurationFile!=null) {
             command += " " + configurationFile;
@@ -330,6 +331,6 @@ public class TestResponder implements Listener {
     }
 
     private void writeReportHTMLToS3() {
-        
+
     }
 }
