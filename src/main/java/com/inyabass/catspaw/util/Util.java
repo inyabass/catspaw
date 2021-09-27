@@ -15,10 +15,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.Properties;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -29,9 +28,12 @@ public class Util {
     public final static SimpleDateFormat STANDARD_DATE_FORMAT = new SimpleDateFormat("yyyyMMdd-HH:mm:ss");
     public final static SimpleDateFormat SPRING_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
 
-    public static void main(String[] args) {
-        File file = new File("src/main/resources/logback.xml");
-        File zippedFile = zipInPlace(file);
+    public static void main(String[] args) throws Throwable {
+        Set<File> files = Util.getFilesInDirectory("target/classes/com/inyabass/catspaw");
+        for(File file: files) {
+            System.out.println(file.getPath());
+        }
+        int i = 0;
     }
 
     public static boolean isValidTimeStamp(String timeStamp) {
@@ -263,5 +265,16 @@ public class Util {
                 logger.warn(reference, "Unable to rewrite properties file " + propertiesFile + " :" + t.getMessage());
             }
         }
+    }
+
+    public static Set<File> getFilesInDirectory(String directoryName) throws Throwable {
+        Stream<Path> pathStream = Files.walk(Paths.get(directoryName), Integer.MAX_VALUE);
+        Set<File> returnValue = new HashSet<>();
+        pathStream.forEach(path -> {
+            if(!Files.isDirectory(path)) {
+                returnValue.add(path.toFile());
+            }
+        });
+        return returnValue;
     }
 }
