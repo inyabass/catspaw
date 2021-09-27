@@ -35,6 +35,7 @@ public class TestExecutor implements Listener {
     private String inputJson = null;
     private KafkaWriter kafkaWriter = new KafkaWriter();
     private List<String> tempFiles = new ArrayList<>();
+    private static String MVN_COMMAND = "mvn --batch-mode";
 
     public TestExecutor() throws Throwable {
         logger.info("TestExecutor starting");
@@ -148,7 +149,7 @@ public class TestExecutor implements Listener {
             logger.info(this.guid, "Created Working Directory " + workingDirectoryFull);
         }
         //
-        // Build script to execute git pull
+        // Build script to execute git clone
         //
         logger.info(this.guid, "Building script to clone repository");
         String repoUrl = null;
@@ -269,7 +270,7 @@ public class TestExecutor implements Listener {
             this.abendWriteTestResponse(t, "Cannot determine tagExpression", testResponseModel);
             return;
         }
-        scriptProcessor.addLine("mvn compile");
+        scriptProcessor.addLine(MVN_COMMAND + " compile");
         String command = "./runtests.sh \"" + tagExpression + "\"";
         if(configurationFile!=null) {
             command += " " + configurationFile;
@@ -369,70 +370,6 @@ public class TestExecutor implements Listener {
         this.abendMessage(t, message);
     }
 
-//    private void overrideParameters(TestRequestModel testRequestModel, String clonedDirectory) {
-//        String configFileDirectory = null;
-//        try {
-//            configFileDirectory = ConfigReader.get(ConfigProperties.CONFIG_DIRECTORY);
-//        } catch (Throwable t) {
-//            logger.error(this.guid, "Unable to determine repo config directory: " + t.getMessage());
-//            return;
-//        }
-//        configFileDirectory = Util.convertPath(configFileDirectory);
-//        int fileEntries = 0;
-//        try {
-//            fileEntries = testRequestModel.getConfigurationSize();
-//        } catch (Throwable t) {
-//            logger.warn(this.guid, "Could not get the number of Configuration File Entries");
-//            return;
-//        }
-//        if(fileEntries==0) {
-//            return;
-//        }
-//        for(int i = 0;i<fileEntries;i++) {
-//            String propertiesFile = null;
-//            try {
-//                propertiesFile = testRequestModel.getPropertiesFile(i);
-//            } catch (Throwable t) {
-//                logger.error(this.guid, "No Properties File Specified");
-//                continue;
-//            }
-//            String propertiesFileFull = clonedDirectory + ScriptProcessor.fs + configFileDirectory + ScriptProcessor.fs + propertiesFile;
-//            if(!Files.exists(Paths.get(propertiesFileFull))) {
-//                logger.warn("Properties File does not exist in repo: " + propertiesFile);
-//                continue;
-//            }
-//            int itemEntries = 0;
-//            List<String> propertiesList = null;
-//            try {
-//                propertiesList = testRequestModel.getPropertiesList(i);
-//                itemEntries = propertiesList.size();
-//            } catch (Throwable t) {
-//                logger.warn(this.guid, "For file " + propertiesFile + " no config items were specified");
-//                continue;
-//            }
-//            Properties properties = new Properties();
-//            try {
-//                properties.load(new FileInputStream(new File(propertiesFileFull)));
-//            } catch (Throwable t) {
-//                logger.warn(this.guid, "Unable to read or parse Configuration file " + propertiesFile + ": " + t.getMessage());
-//                continue;
-//            }
-//            for(String propertyName: propertiesList) {
-//                String propertyValue = testRequestModel.getProperty(i, propertyName);
-//                if(properties.containsKey(propertyName)) {
-//                    properties.setProperty(propertyName, propertyValue);
-//                } else {
-//                    properties.put(propertyName, propertyValue);
-//                }
-//            }
-//            try {
-//                properties.store(new FileOutputStream(new File(propertiesFileFull)), "Updated");
-//            } catch (Throwable t) {
-//                logger.warn(this.guid, "Unable to rewrite properties file " + propertiesFile + " :" + t.getMessage());
-//            }
-//        }
-//    }
-
     private void writeResultsToS3(File cloneStdoutFile, File execStdoutFile, File jsonFile, TestResponseModel testResponseModel) throws Throwable {
         logger.info(this.guid, "Writing results to AWS S3 Bucket");
         String tempDir = Util.getTemp();
@@ -442,6 +379,7 @@ public class TestExecutor implements Listener {
             String stdListFileNameFull = null;
             stdListFileNameFull = tempDir + stdListFileName;
             Path stdListPath = Paths.get(stdListFileNameFull);
+            File stdListFile = stdListPath.toFile();
             try {
                 if (Files.exists(stdListPath)) {
                     Files.delete(stdListPath);

@@ -66,13 +66,13 @@ public class ScriptProcessor {
         Files.createFile(scriptFilePath);
         scriptFilePath.toFile().setExecutable(true);
         FileWriter fileWriter = new FileWriter(scriptFileName);
-        fileWriter.write("#!/usr/bin/env bash" + "\n");
+        fileWriter.write("#!/usr/bin/env bash" + System.lineSeparator());
         int i = 0;
         for(String string: this.lines) {
             i++;
             logger.debug("Command -> " + string);
             if(i < this.lines.size()) {
-                fileWriter.write(string + "\n");
+                fileWriter.write(string + System.lineSeparator());
             } else {
                 fileWriter.write(string);
             }
@@ -95,15 +95,17 @@ public class ScriptProcessor {
             processBuilder.directory(dirPath.toFile());
             processBuilder.command(this.getBash(environment), scriptFileName);
             process = processBuilder.start();
-            boolean alive = process.isAlive();
-            Thread.sleep(100);
+            Thread.sleep(250);
+            if(Util.isUnix()) {
+                process.waitFor();
+            }
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String outputFileName = Util.getTemp() + "catsrunlog-" + System.currentTimeMillis() + ".log";
             fileWriter = new FileWriter(outputFileName);
             String line = null;
             while ((line = reader.readLine()) != null) {
                 logger.debug(line);
-                fileWriter.write(line + "\n");
+                fileWriter.write(line + System.lineSeparator());
             }
             fileWriter.close();
             this.stdoutFile = new File(outputFileName);
