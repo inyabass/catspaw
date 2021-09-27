@@ -4,9 +4,6 @@ import java.time.Duration;
 
 public class ConfigProperties {
 
-    // Config
-    public static String CONFIG_ID="config.id";
-
     // Couchdb
     public static final String COUCHDB_SERVER = "couchdb.server";
     public static final String COUCHDB_CONFIG_DB = "couchdb.config.db";
