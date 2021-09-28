@@ -6,12 +6,19 @@ import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.inyabass.catspaw.config.ConfigProperties;
 import com.inyabass.catspaw.config.ConfigReader;
 import com.inyabass.catspaw.logging.Logger;
+import com.inyabass.catspaw.util.Util;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.lang.invoke.MethodHandles;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class AwsS3Client {
 
@@ -23,8 +30,8 @@ public class AwsS3Client {
 
     public static void main(String[] args) throws Throwable {
         AwsS3Client awsS3Client = new AwsS3Client();
-        awsS3Client.setRegions(Regions.EU_WEST_1.getName());
-        int i = 1;
+        File file = awsS3Client.getObject("1b48a2eb-066f-471b-b245-08b109c2f917.json.zip");
+        int i = 0;
     }
 
     public AwsS3Client() throws Throwable {
@@ -59,5 +66,19 @@ public class AwsS3Client {
 
     public void putObject(String fileName, File file) {
         this.s3Client.putObject(this.bucketName, fileName, file);
+    }
+
+    public File getObject(String objectName) {
+        String fileName = Util.getTemp() + "s3dwn_" + System.currentTimeMillis() + objectName;
+        Path filePath = Paths.get(fileName);
+        S3Object s3Object = this.s3Client.getObject(this.bucketName, objectName);
+        S3ObjectInputStream s3ObjectInputStream = s3Object.getObjectContent();
+        try {
+            Files.copy(s3ObjectInputStream, filePath);
+        } catch (Throwable t) {
+            logger.error("Unable to copy S3 Object to File: " + fileName + " : " + t.getMessage());
+            return null;
+        }
+        return filePath.toFile();
     }
 }

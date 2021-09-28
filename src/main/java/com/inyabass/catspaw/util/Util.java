@@ -19,6 +19,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 public class Util {
@@ -29,10 +30,7 @@ public class Util {
     public final static SimpleDateFormat SPRING_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
 
     public static void main(String[] args) throws Throwable {
-        Set<File> files = Util.getFilesInDirectory("target/classes/com/inyabass/catspaw");
-        for(File file: files) {
-            System.out.println(file.getPath());
-        }
+        File unzippedFile = unzipInPlace(new File("src/main/resources/typical.json.zip"));
         int i = 0;
     }
 
@@ -139,7 +137,39 @@ public class Util {
     }
 
     public static File unzipInPlace(File fileToUnzip) {
-        return null;
+        String unZippedFileName = fileToUnzip.getAbsolutePath();
+        if(!unZippedFileName.endsWith(".zip")) {
+            logger.error("File " + unZippedFileName + " did not have .zip at the end of the name");
+            return null;
+        }
+        unZippedFileName = unZippedFileName.substring(0, unZippedFileName.length() - 4);
+        Path outputPath = Paths.get(unZippedFileName);
+        try {
+            Files.delete(outputPath);
+        } catch (Throwable t) {
+            logger.warn("Could not delete " + unZippedFileName + " : " + t.getMessage());
+        }
+        FileInputStream fileInputStream = null;
+        try {
+            fileInputStream = new FileInputStream(fileToUnzip);
+        } catch (Throwable t) {
+            logger.error("Unable to create FileInputStream on zipfile :" + fileToUnzip.getName());
+            return null;
+        }
+        ZipInputStream zipInputStream = new ZipInputStream(fileInputStream);
+        try {
+            int available = zipInputStream.available();
+            if(available!=1) {
+                logger.error("File contained more than 1 file :" + fileToUnzip.getName());
+                return null;
+            }
+            ZipEntry zipEntry = zipInputStream.getNextEntry();
+            Files.copy(zipInputStream, outputPath);
+        } catch (Throwable t) {
+            logger.error("Unable to Unzip file " + fileToUnzip.getName() + "into " + unZippedFileName + " : " + t.getMessage());
+            return null;
+        }
+        return outputPath.toFile();
     }
 
     public static boolean isWindows() {

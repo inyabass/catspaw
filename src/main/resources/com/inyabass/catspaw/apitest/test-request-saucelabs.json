@@ -13,7 +13,7 @@
   ],
   "output": {
     "report": {
-      "reports": ""
+      "reports": "detailed overview"
     },
     "teams": {
       "teamKey": ""

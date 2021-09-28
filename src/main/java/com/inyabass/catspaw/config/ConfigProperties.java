@@ -41,6 +41,7 @@ public class ConfigProperties {
 
     // TestResponser
     public static final String TESTRESPONDER_DEBUG = "testresponder.debug";
+    public static final String REPORTS_DIRECTORY = "reports.directory";
 
     // AWS S3
     public static final String AWS_BUCKET_NAME = "aws.bucket.name";

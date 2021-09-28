@@ -408,6 +408,9 @@ public class TestExecutor implements Listener {
                 throw t;
             }
             File S3ZippedStdListFile = Util.zipInPlace(stdListPath.toFile());
+            if(S3ZippedStdListFile==null) {
+                logger.error(this.guid, "Unable to zip " + stdListPath.toFile().getName() + " in place");
+            }
             testResponseModel.addStdout(S3ZippedStdListFile.getName());
             try {
                 Util.writeFileToS3(S3ZippedStdListFile, this.guid);
@@ -453,6 +456,9 @@ public class TestExecutor implements Listener {
                 logger.error(this.guid, "Unable to create Json file: " + jsonFileName + " " + t.getMessage());
             }
             File S3ZippedJsonFile = Util.zipInPlace(jsonPath.toFile());
+            if(S3ZippedJsonFile==null) {
+                logger.error(this.guid, "Unable to zip " + jsonPath.toFile().getName() + " in place");
+            }
             testResponseModel.addResultJson(S3ZippedJsonFile.getName());
             try {
                 Util.writeFileToS3(S3ZippedJsonFile, this.guid);

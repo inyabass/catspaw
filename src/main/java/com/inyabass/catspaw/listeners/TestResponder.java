@@ -1,5 +1,6 @@
 package com.inyabass.catspaw.listeners;
 
+import com.inyabass.catspaw.clients.AwsS3Client;
 import com.inyabass.catspaw.clients.KafkaReader;
 import com.inyabass.catspaw.config.ConfigProperties;
 import com.inyabass.catspaw.config.ConfigReader;
@@ -11,7 +12,9 @@ import org.apache.commons.io.FileUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.lang.invoke.MethodHandles;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -19,6 +22,7 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class TestResponder implements Listener {
 
@@ -175,6 +179,7 @@ public class TestResponder implements Listener {
         } catch (Throwable t) {
             logger.info(this.guid, "Using default branch");
         }
+        scriptProcessor.addLine(MVN_COMMAND + " compile");
         try {
             scriptProcessor.run();
         } catch (Throwable t) {
@@ -213,11 +218,60 @@ public class TestResponder implements Listener {
         logger.info(this.guid, "Overriding any parameters");
         Util.overrideParameters(testResponseModel, clonedDirectoryFull, this.guid);
         //
-        // Pull Results json file from S3
+        // Pull Results Zipped JSON file from S3
         //
+        String jsonZippedFileName = null;
+        try {
+            jsonZippedFileName = testResponseModel.getResultJson();
+        } catch (Throwable t) {
+            this.abendMessage(null, "Unable to pull the JSON Zipfile name from the test response: " + t.getMessage());
+            return;
+        }
+        AwsS3Client awsS3Client = null;
+        try {
+            awsS3Client = new AwsS3Client();
+        } catch (Throwable t) {
+            this.abendMessage(null, "Unable to instantiate an S3 Client instance: " + t.getMessage());
+            return;
+        }
+        File jsonZippedFile = awsS3Client.getObject(jsonZippedFileName);
+        if(jsonZippedFile==null) {
+            this.abendMessage(null, "Unable to pull the JSON Zipfile from S3 - see logs as to why");
+            return;
+        }
+        //
+        // Unzip the file in place
+        //
+        File jsonUnzippedFile = Util.unzipInPlace(jsonZippedFile);
+        if(jsonUnzippedFile==null) {
+            this.abendMessage(null, "Unable to Unzip the JSON Zipfile from S3 in place - see logs as to why");
+            return;
+        }
         //
         // Push the Results json file into the correct place in the repo
         //
+        String jsonFileLocation = null;
+        try {
+            jsonFileLocation = ConfigReader.get(ConfigProperties.JSON_FILE_LOCATION);
+        } catch (Throwable t) {
+            this.abendMessage(t, "Unable to get JSON File location");
+            return;
+        }
+        String targetJsonFileInRepo = clonedDirectoryFull + ScriptProcessor.fs + Util.convertPath(jsonFileLocation);
+        Path targetPath = Paths.get(targetJsonFileInRepo);
+        InputStream inputStream = null;
+        try {
+            inputStream = new FileInputStream(jsonUnzippedFile);
+        } catch (Throwable t) {
+            this.abendMessage(null, "Unable to create a FileInputStream for the unzipped JSON file: " + t.getMessage());
+            return;
+        }
+        try {
+            Files.copy(inputStream, targetPath);
+        } catch (Throwable t) {
+            this.abendMessage(null, "Unable to copy JSON file into target place in repo: " + t.getMessage());
+            return;
+        }
         //
         // Build and execute Script to Generate Report
         //
@@ -232,8 +286,12 @@ public class TestResponder implements Listener {
             logger.info(this.guid, "Using default Configuration File");
         }
         String reports = "overview detailed";
-        // Get Reports to produce from Test Response if present
-        scriptProcessor.addLine(MVN_COMMAND + " compile");
+        try {
+            reports = testResponseModel.getReports();
+            logger.info(this.guid, "Using Reports '" + reports + "'");
+        } catch (Throwable t) {
+            logger.info(this.guid, "Using default Reports");
+        }
         String command = "./runreports.sh \"" + reports + "\"";
         if(configurationFile!=null) {
             command += " " + configurationFile;
@@ -263,6 +321,36 @@ public class TestResponder implements Listener {
         //
         // Upload reports html to S3 Reporting bucket
         //
+        String reportsDirectory = null;
+        try {
+            reportsDirectory = ConfigReader.get(ConfigProperties.REPORTS_DIRECTORY);
+        } catch (Throwable t) {
+            this.abendMessage(t, "Unable to get JSON File location");
+            return;
+        }
+        String reportsDirectoryFull = clonedDirectoryFull + ScriptProcessor.fs + Util.convertPath(reportsDirectory);
+        Set<File> reportFiles = null;
+        try {
+            reportFiles = Util.getFilesInDirectory(reportsDirectoryFull);
+        } catch (Throwable t) {
+            this.abendMessage(t, "Unable to get Any Report Files : " + t.getMessage());
+            return;
+        }
+        String reportsBucket = null;
+        try {
+            reportsBucket = ConfigReader.get(ConfigProperties.AWS_REPORTING_BUCKET_NAME);
+        } catch (Throwable t) {
+            this.abendMessage(t, "Unable to get Reporting Bucket Name");
+            return;
+        }
+        awsS3Client.setBucketName(reportsBucket);
+        for(File reportFile: reportFiles) {
+            String reportFileName = reportFile.getPath();
+            reportFileName = this.guid + reportFileName.replace(reportsDirectoryFull, "").replaceAll("\\\\", "/");
+            logger.info(this.guid, "Uploading " + reportFile.getName() + " to AWS S3");
+            awsS3Client.putObject(reportFileName, reportFile);
+        }
+        logger.info(this.guid, "End Processing - SUCCESS");
     }
 
     private void abendMessage(Throwable t, String message) {
