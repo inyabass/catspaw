@@ -1,14 +1,13 @@
 {
   "requestor": "mark",
-  "tagExpression": "@configtest",
+  "tagExpression": "@browser-1",
   "branch": "develop",
   "configurationFile": "src/main/resources/com/inyabass/cats/config/selenium.properties",
   "configuration": [
     {
       "propertiesFile": "selenium.properties",
       "properties": {
-        "ITEM": "was overridden",
-        "NEW": "A new Property"
+        "PLATFORM": "local"
       }
     }
   ],

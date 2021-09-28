@@ -257,8 +257,15 @@ public class Util {
                     properties.put(propertyName, propertyValue);
                 }
             }
+            FileOutputStream fileOutputStream = null;
             try {
-                properties.store(new FileOutputStream(new File(propertiesFileFull)), "Updated");
+                fileOutputStream = new FileOutputStream(new File(propertiesFileFull));
+                if(fileOutputStream==null) {
+                    logger.error(reference, "Unable to create FileOutputStream to rewrite file " + propertiesFile);
+                    continue;
+                }
+                properties.store(fileOutputStream, "Updated");
+                fileOutputStream.close();
             } catch (Throwable t) {
                 logger.warn(reference, "Unable to rewrite properties file " + propertiesFile + " :" + t.getMessage());
             }
