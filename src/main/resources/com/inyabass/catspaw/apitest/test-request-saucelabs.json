@@ -19,9 +19,9 @@
       "teamKey": ""
     },
     "email": {
-      "to": "",
-      "subject": "",
-      "body": ""
+      "to": "mark.wilkinson@dotmatics.com",
+      "subject": "Test Results for ",
+      "body": "Test Results"
     }
   }
 }

@@ -317,8 +317,7 @@ public class TestResponder implements Listener {
         if(!this.debug) {
             this.tempFiles.add(scriptProcessor.getStdoutFile().getAbsolutePath());
         }
-        File execStdoutFile = scriptProcessor.getStdoutFile();
-        //
+       //
         // Upload reports html to S3 Reporting bucket
         //
         String reportsDirectory = null;
@@ -331,7 +330,7 @@ public class TestResponder implements Listener {
         String reportsDirectoryFull = clonedDirectoryFull + ScriptProcessor.fs + Util.convertPath(reportsDirectory);
         Set<File> reportFiles = null;
         try {
-            reportFiles = Util.getFilesInDirectory(reportsDirectoryFull);
+            reportFiles = Util.getFilesInDirectory(reportsDirectoryFull, Integer.MAX_VALUE);
         } catch (Throwable t) {
             this.abendMessage(t, "Unable to get Any Report Files : " + t.getMessage());
             return;
@@ -344,12 +343,33 @@ public class TestResponder implements Listener {
             return;
         }
         awsS3Client.setBucketName(reportsBucket);
+        ArrayList<String> htmlFiles = new ArrayList<>();
         for(File reportFile: reportFiles) {
             String reportFileName = reportFile.getPath();
             reportFileName = this.guid + reportFileName.replace(reportsDirectoryFull, "").replaceAll("\\\\", "/");
             logger.info(this.guid, "Uploading " + reportFile.getName() + " to AWS S3");
             awsS3Client.putObject(reportFileName, reportFile);
+            if(reportFileName.endsWith(".html")||reportFileName.endsWith(".htm")) {
+                htmlFiles.add(reportFileName);
+            }
         }
+        ArrayList<String> reportFullUrls = new ArrayList<>();
+        if(htmlFiles.size()>0) {
+            String baseWebUrl = null;
+            try {
+                baseWebUrl = ConfigReader.get(ConfigProperties.AWS_WEB_BASE_URL);
+                logger.info(this.guid, "Getting List of Report URLs");
+                for(String htmlFileName: htmlFiles) {
+                    String webAddress = baseWebUrl + htmlFileName;
+                    logger.info(this.guid, "URL: " + webAddress);
+                    reportFullUrls.add(webAddress);
+                }
+            } catch (Throwable t) {
+            }
+        }
+        //
+        // Send notification Email
+        //
         logger.info(this.guid, "End Processing - SUCCESS");
     }
 

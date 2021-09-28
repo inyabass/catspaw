@@ -99,4 +99,16 @@ public class TestRequestModel extends DataModel {
     public String getReports() {
         return this.getString(REPORTS_PATH);
     }
+
+    public String getEmailTo() {
+        return this.getString(EMAIL_TO_PATH);
+    }
+
+    public String getEmailSubject() {
+        return this.getString(EMAIL_SUBJECT_PATH);
+    }
+
+    public String getEmailBody() {
+        return this.getString(EMAIL_BODY_PATH);
+    }
 }

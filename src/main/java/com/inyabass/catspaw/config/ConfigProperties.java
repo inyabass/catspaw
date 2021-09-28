@@ -39,9 +39,10 @@ public class ConfigProperties {
     public static final String JSON_FILE_LOCATION = "json.file.location";
     public static final String TESTEXECUTOR_DEBUG = "testexecutor.debug";
 
-    // TestResponser
+    // TestResponder
     public static final String TESTRESPONDER_DEBUG = "testresponder.debug";
     public static final String REPORTS_DIRECTORY = "reports.directory";
+    public static final String SMTP_SERVER = "smtp.server";
 
     // AWS S3
     public static final String AWS_BUCKET_NAME = "aws.bucket.name";
@@ -49,4 +50,5 @@ public class ConfigProperties {
     public static final String AWS_REGION_NAME = "aws.region.name";
     public static final String AWS_ACCESS_KEY = "aws.data.1";
     public static final String AWS_SECRET_KEY = "aws.data.2";
+    public static final String AWS_WEB_BASE_URL = "aws.web.base.url";
 }

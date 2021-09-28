@@ -311,8 +311,8 @@ public class Util {
         }
     }
 
-    public static Set<File> getFilesInDirectory(String directoryName) throws Throwable {
-        Stream<Path> pathStream = Files.walk(Paths.get(directoryName), Integer.MAX_VALUE);
+    public static Set<File> getFilesInDirectory(String directoryName, int level) throws Throwable {
+        Stream<Path> pathStream = Files.walk(Paths.get(directoryName), level);
         Set<File> returnValue = new HashSet<>();
         pathStream.forEach(path -> {
             if(!Files.isDirectory(path)) {
