@@ -11,29 +11,17 @@
       }
     }
   ],
-  "targets": [
-    {
-      "target": "report",
-      "options": {
-        "option1": "value1"
-      }
+  "output": {
+    "report": {
+      "reports": ""
     },
-    {
-      "target": "email",
-      "options": {
-        "subject": "Notification of Test Run Completion",
-        "to": [
-          "inyabass@gmail.com",
-          "mark.wilkinson@dotmatics.com"
-        ]
-      }
+    "teams": {
+      "teamKey": ""
     },
-    {
-      "target": "teams",
-      "options": {
-        "webhooks": "",
-        "token": ""
-      }
+    "email": {
+      "to": "",
+      "subject": "",
+      "body": ""
     }
-  ]
+  }
 }

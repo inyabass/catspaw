@@ -14,9 +14,16 @@ public class TestRequestModel extends DataModel {
     private static String CONFIGURATION_PATH = "configuration";
     private static String PROPERTIES_FILE_PATH = CONFIGURATION_PATH + "[" + REPLACEABLE + "].propertiesFile";
     private static String PROPERTIES_PATH = CONFIGURATION_PATH + "[" + REPLACEABLE + "].properties";
-    private static String TARGETS_PATH = "targets";
-    private static String TARGET_PATH = TARGETS_PATH + "[" + REPLACEABLE + "].target";
-    private static String OPTIONS_PATH = TARGETS_PATH + "[" + REPLACEABLE + "].options";
+    private static String OUTPUT_PATH = "output";
+    private static String REPORT_PATH = OUTPUT_PATH + ".report";
+    private static String REPORTS_PATH = REPORT_PATH + ".reports";
+    // Methods for the below fields to do
+    private static String TEAMS_PATH = OUTPUT_PATH + ".teams";
+    private static String TEAM_KEYS_PATH = TEAMS_PATH + ".teamKeys";
+    private static String EMAIL_PATH = OUTPUT_PATH + ".email";
+    private static String EMAIL_TO_PATH = EMAIL_PATH + ".to";
+    private static String EMAIL_SUBJECT_PATH = EMAIL_PATH + ".subject";
+    private static String EMAIL_BODY_PATH = EMAIL_PATH + ".body";
 
     public TestRequestModel() {
     }
@@ -89,15 +96,7 @@ public class TestRequestModel extends DataModel {
         return getString(this.replace(PROPERTIES_PATH, index) + "." + propertyName);
     }
 
-    public int getTargetsSize() {
-        return this.getSizeOfArray(TARGETS_PATH);
-    }
-
-    public String getTarget(int index) {
-        return this.getString(this.replace(TARGET_PATH, index));
-    }
-
-    public List<String> getOptionsList(int index) {
-        return getPropertiesOf(this.replace(OPTIONS_PATH, index));
+    public String getReports() {
+        return this.getString(REPORTS_PATH);
     }
 }

@@ -57,7 +57,7 @@ public class AwsS3Client {
         this.s3Client.putObject(this.bucketName, file.getName(), file);
     }
 
-    public void putObject(String folder, File file) {
-        this.s3Client.putObject(this.bucketName, folder + "/" + file.getName(), file);
+    public void putObject(String fileName, File file) {
+        this.s3Client.putObject(this.bucketName, fileName, file);
     }
 }

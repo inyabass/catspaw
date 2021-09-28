@@ -85,6 +85,21 @@ public class ApiController {
 			logger.info(guid, "tagExpression Not Found");
 			throw new InvalidPayloadException("tagExpression not Found");
 		}
+		if(tagExpression==null||tagExpression.equals("")) {
+			logger.info(guid, "tagExpression Null or Blank");
+			throw new InvalidPayloadException("tagExpression Null or Blank");
+		}
+		String reports = null;
+		try {
+			reports = this.testRequestModel.getReports();
+		} catch (Throwable t) {
+			logger.info(guid, "output.report.reports Not Found");
+			throw new InvalidPayloadException("output.report.reports not Found");
+		}
+		if(reports==null||reports.equals("")) {
+			logger.info(guid, "output.report.reports Null or Blank");
+			throw new InvalidPayloadException("output.report.reports Null or Blank");
+		}
 	}
 
 	public void processBody(String body) {
