@@ -346,7 +346,7 @@ public class TestExecutor implements Listener {
             this.abendMessage(t, "Unable to Write to test-response");
             return;
         }
-        logger.error(this.guid, "End Processing - SUCCESS");
+        logger.info(this.guid, "End Processing - SUCCESS");
     }
 
     private void abendMessage(Throwable t, String message) {

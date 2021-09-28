@@ -245,8 +245,15 @@ public class Util {
                 continue;
             }
             Properties properties = new Properties();
+            FileInputStream fileInputStream = null;
             try {
-                properties.load(new FileInputStream(new File(propertiesFileFull)));
+                fileInputStream = new FileInputStream(new File(propertiesFileFull));
+                if(fileInputStream==null) {
+                    logger.warn(reference, "Unable to get a FileInputStream for " + propertiesFile);
+                    continue;
+                }
+                properties.load(fileInputStream);
+                fileInputStream.close();
             } catch (Throwable t) {
                 logger.warn(reference, "Unable to read or parse Configuration file " + propertiesFile + ": " + t.getMessage());
                 continue;

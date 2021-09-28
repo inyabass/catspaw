@@ -1,6 +1,6 @@
 {
   "requestor": "mark",
-  "tagExpression": "@browser-1",
+  "tagExpression": "@configtest-1",
   "branch": "develop",
   "configurationFile": "src/main/resources/com/inyabass/cats/config/selenium.properties",
   "configuration": [
