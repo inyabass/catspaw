@@ -157,7 +157,7 @@ public class TestResponder implements Listener {
         //
         // Clone Repository
         //
-        logger.info(this.guid, "Executing script to clone repository");
+        logger.info(this.guid, "Executing script to clone and compile repository");
         ScriptProcessor scriptProcessor = new ScriptProcessor();
         scriptProcessor.setWorkingDirectory(workingDirectory);
         try {
@@ -211,7 +211,7 @@ public class TestResponder implements Listener {
             this.abendMessage(null, "Cloned Directory did not exist: " + clonedDirectoryFull);
             return;
         }
-        logger.info(this.guid, "Repository Cloned successfully");
+        logger.info(this.guid, "Repository Cloned and compiled successfully");
         File cloneStdoutFile = scriptProcessor.getStdoutFile();
         //
         // Override any parameters in files specified by the Test Request
