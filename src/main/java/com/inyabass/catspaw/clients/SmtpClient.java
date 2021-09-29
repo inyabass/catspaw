@@ -1,33 +1,41 @@
 package com.inyabass.catspaw.clients;
 
-import javax.mail.Session;
+import com.inyabass.catspaw.logging.Logger;
+
+import java.lang.invoke.MethodHandles;
 
 public class SmtpClient {
 
-    private String smtpServer = null;
-    private int port = 25;
-    private Session session = null;
+    final static Logger logger = new Logger(MethodHandles.lookup().lookupClass());
 
-    public SmtpClient(String smtpServer) {
+    private String smtpServer = null;
+    private String from = null;
+    private int port = 25;
+
+    public SmtpClient(String smtpServer, String from) {
         this.setSmtpServer(smtpServer);
-        this.session = this.createSession();
+        this.from = from;
     }
 
-    public SmtpClient(String smtpServer, int port) {
+    public SmtpClient(String smtpServer, String from, int port) {
         this.setSmtpServer(smtpServer);
+        this.from = from;
         this.setPort(port);
-        this.session = this.createSession();
+    }
+
+    public static void main(String[] args) throws Throwable {
+        SmtpClient smtpClient = new SmtpClient("localhost", "mark.wilkinson@dotmatics.com");
+        smtpClient.sendSimpleEmail("inyabass@gmail.com", "Test message", "Hello world");
     }
 
     public void setSmtpServer(String smtpServer) {
         this.smtpServer = smtpServer;
     }
 
-    public void setPort(int port) {
-        this.port = port;
+    public void sendSimpleEmail(String to, String subject, String body) throws Throwable {
     }
 
-    public Session createSession() {
-        return null;
+    public void setPort(int port) {
+        this.port = port;
     }
 }
