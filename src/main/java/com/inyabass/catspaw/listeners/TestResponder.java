@@ -22,6 +22,7 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 
 public class TestResponder implements Listener {
@@ -273,18 +274,49 @@ public class TestResponder implements Listener {
             return;
         }
         //
+        // Create a properties file to be picked up by Reporter for insertion into reports
+        //
+        logger.info(this.guid, "Creating Properties File to be picked up by Reporter");
+        String xferPropertiesFile = null;
+        try {
+            xferPropertiesFile = ConfigReader.get(ConfigProperties.EXPORTED_CONFIG_FILE);
+        } catch (Throwable t) {
+            this.abendMessage(t, "Unable to get Transfer Properties file name");
+            return;
+        }
+        if(Files.exists(Paths.get(xferPropertiesFile))) {
+            try {
+                Files.delete(Paths.get(xferPropertiesFile));
+            } catch (Throwable t) {
+                this.abendMessage(t, "Unable to delete already existing Transfer Properties file");
+                return;
+            }
+        }
+        Properties xferProperties = new Properties();
+        xferProperties.put("cats.guid", testResponseModel.getGuid());
+        xferProperties.put("cats.requestor", testResponseModel.getRequestor());
+        xferProperties.put("cats.timerequested", testResponseModel.getTimeRequested());
+        xferProperties.put("cats.tagexpression", testResponseModel.getTagExpression());
+        xferProperties.put("cats.branch", testResponseModel.getBranch());
+        FileOutputStream fileOutputStream = null;
+        try {
+            fileOutputStream = new FileOutputStream(new File(clonedDirectoryFull + ScriptProcessor.fs + xferPropertiesFile));
+        } catch (Throwable t) {
+            this.abendMessage(t, "Unable to create FileoutputStream on Transfer Properties file");
+            return;
+        }
+        try {
+            xferProperties.store(fileOutputStream, "Transfer Properties File");
+        } catch (Throwable t) {
+            this.abendMessage(t, "Unable to create Transfer Properties file");
+            return;
+        }
+        //
         // Build and execute Script to Generate Report
         //
         logger.info(this.guid, "Building script to Execute Reports");
         scriptProcessor = new ScriptProcessor();
         scriptProcessor.setWorkingDirectory(clonedDirectory);
-        String configurationFile = null;
-        try {
-            configurationFile = testResponseModel.getConfigurationFile();
-            logger.info(this.guid, "Using Configuration File '" + configurationFile + "'");
-        } catch (Throwable t) {
-            logger.info(this.guid, "Using default Configuration File");
-        }
         String reports = "overview detailed";
         try {
             reports = testResponseModel.getReports();
@@ -292,10 +324,7 @@ public class TestResponder implements Listener {
         } catch (Throwable t) {
             logger.info(this.guid, "Using default Reports");
         }
-        String command = "./runreports.sh \"" + reports + "\"";
-        if(configurationFile!=null) {
-            command += " " + configurationFile;
-        }
+        String command = "./runreports.sh \"" + reports + "\" " + xferPropertiesFile;
         scriptProcessor.addLine(command);
         logger.info(this.guid, "Executing script to run Reports");
         try {

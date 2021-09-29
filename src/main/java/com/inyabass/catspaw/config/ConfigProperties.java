@@ -42,6 +42,7 @@ public class ConfigProperties {
     // TestResponder
     public static final String TESTRESPONDER_DEBUG = "testresponder.debug";
     public static final String REPORTS_DIRECTORY = "reports.directory";
+    public static final String EXPORTED_CONFIG_FILE = "exported.config.file";
     public static final String SMTP_SERVER = "smtp.server";
     public static final String SMTP_PORT = "smtp.port";
     public static final String SMTP_USERNAME = "smtp.username";
