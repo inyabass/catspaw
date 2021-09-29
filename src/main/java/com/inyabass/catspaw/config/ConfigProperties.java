@@ -43,6 +43,9 @@ public class ConfigProperties {
     public static final String TESTRESPONDER_DEBUG = "testresponder.debug";
     public static final String REPORTS_DIRECTORY = "reports.directory";
     public static final String SMTP_SERVER = "smtp.server";
+    public static final String SMTP_PORT = "smtp.port";
+    public static final String SMTP_USERNAME = "smtp.username";
+    public static final String SMTP_PASSWORD = "smtp.password";
 
     // AWS S3
     public static final String AWS_BUCKET_NAME = "aws.bucket.name";
