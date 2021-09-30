@@ -13,6 +13,7 @@ public class TestRequestModel extends DataModel {
     private static String GUID_PATH = "guid";
     private static String REQUESTOR_PATH = "requestor";
     private static String TIME_REQUESTED_PATH = "timeRequested";
+    private static String PROJECT_PATH = "project";
     private static String TAG_EXPRESSION_PATH = "tagExpression";
     private static String BRANCH_PATH = "branch";
     private static String CONFIGURATION_FILE_PATH = "configurationFile";
@@ -69,6 +70,10 @@ public class TestRequestModel extends DataModel {
 
     public void setTimeRequested(String timeRequested) {
         this.setString(TIME_REQUESTED_PATH, timeRequested);
+    }
+
+    public String getProject() {
+        return this.getString(PROJECT_PATH);
     }
 
     public String getTagExpression() {

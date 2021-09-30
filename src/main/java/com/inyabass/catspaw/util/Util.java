@@ -57,8 +57,14 @@ public class Util {
         return UUID.randomUUID().toString();
     }
 
-    public static String buildSpringJsonResponse(int status, String error) {
-        return "{\"timestamp\":" + Util.getSpringTimeStampNow() + "\",\"status\":"+ status + ",\"error\":\"" + error + "\",\"path\":\"/\"}";
+    public static String buildSpringJsonResponse(int status, String error, String guid) {
+        String returnValue = "{\"timestamp\":" + Util.getSpringTimeStampNow() + "\",\"status\":"+ status + ",\"error\":\"" + error + "\",\"path\":\"/\"";
+        if(guid!=null) {
+            returnValue += ",\"guid\": \"" + guid + "\"}";
+        } else {
+            returnValue += "}";
+        }
+        return returnValue;
     }
 
     public static File zipInPlace(File fileToZip) {

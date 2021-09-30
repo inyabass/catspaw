@@ -21,15 +21,16 @@ public class ApiController {
 	private String body = null;
 	private TestRequestModel testRequestModel = null;
 	private KafkaWriter kafkaWriter = new KafkaWriter();
+	private String guid = null;
 
 	@ResponseStatus(HttpStatus.CREATED)
-	@PostMapping("/")
+	@PostMapping("/request")
 	public String post(@RequestBody String body) {
 		logger.info("New Request", "New Request for " + ConfigProperties.TEST_REQUEST_TOPIC);
 		this.body = body;
 		this.validateBody(this.body);
 		this.processBody(this.body);
-		return Util.buildSpringJsonResponse(HttpStatus.CREATED.value(), "Created");
+		return Util.buildSpringJsonResponse(HttpStatus.CREATED.value(), "Created", this.guid);
 	}
 
 	private void validateBody(String body) {
@@ -39,27 +40,26 @@ public class ApiController {
 			logger.info("New Request", "Unable to parse JSON document body");
 			throw new InvalidPayloadException("Unable to parse JSON document body");
 		}
-		String guid = null;
 		try {
-			guid = this.testRequestModel.getGuid();
+			this.guid = this.testRequestModel.getGuid();
 		} catch (Throwable t) {
-			guid = Util.getGuid();
-			logger.info(guid, "assigning GUID " + guid);
-			this.testRequestModel.addGuid(guid);
+			this.guid = Util.getGuid();
+			logger.info(this.guid, "assigning GUID " + this.guid);
+			this.testRequestModel.addGuid(this.guid);
 		}
-		if(guid==null||guid.equals("")) {
-			logger.info(guid, "guid Null or Blank");
+		if(this.guid==null||this.guid.equals("")) {
+			logger.info(this.guid, "guid Null or Blank");
 			throw new InvalidPayloadException("guid Null or Blank");
 		}
 		String requestor = null;
 		try {
 			requestor = this.testRequestModel.getRequestor();
 		} catch (Throwable t) {
-			logger.info(guid, "requestor Not Found");
+			logger.info(this.guid, "requestor Not Found");
 			throw new InvalidPayloadException("requestor Not Found");
 		}
 		if(requestor==null||requestor.equals("")) {
-			logger.info(guid, "requestor Null or Blank");
+			logger.info(this.guid, "requestor Null or Blank");
 			throw new InvalidPayloadException("requestor Null or Blank");
 		}
 		String timeRequested = null;
@@ -67,37 +67,37 @@ public class ApiController {
 			timeRequested = this.testRequestModel.getTimeRequested();
 		} catch (Throwable t) {
 			timeRequested = Util.getStandardTimeStampNow();
-			logger.info(guid, "assigning timeRequested " + timeRequested);
+			logger.info(this.guid, "assigning timeRequested " + timeRequested);
 			this.testRequestModel.addTimeRequested(timeRequested);
 		}
 		if(timeRequested==null||timeRequested.equals("")) {
-			logger.info(guid, "timeRequested Null or Blank");
+			logger.info(this.guid, "timeRequested Null or Blank");
 			throw new InvalidPayloadException("timeRequested Null or Blank");
 		}
 		if(!Util.isValidTimeStamp(timeRequested)) {
-			logger.info(guid, "Invalid timeRequested");
+			logger.info(this.guid, "Invalid timeRequested");
 			throw new InvalidPayloadException("Invalid timeRequested");
 		}
 		String tagExpression = null;
 		try {
 			tagExpression = this.testRequestModel.getTagExpression();
 		} catch (Throwable t) {
-			logger.info(guid, "tagExpression Not Found");
+			logger.info(this.guid, "tagExpression Not Found");
 			throw new InvalidPayloadException("tagExpression not Found");
 		}
 		if(tagExpression==null||tagExpression.equals("")) {
-			logger.info(guid, "tagExpression Null or Blank");
+			logger.info(this.guid, "tagExpression Null or Blank");
 			throw new InvalidPayloadException("tagExpression Null or Blank");
 		}
 		String reports = null;
 		try {
 			reports = this.testRequestModel.getReports();
 		} catch (Throwable t) {
-			logger.info(guid, "output.report.reports Not Found");
+			logger.info(this.guid, "output.report.reports Not Found");
 			throw new InvalidPayloadException("output.report.reports not Found");
 		}
 		if(reports==null||reports.equals("")) {
-			logger.info(guid, "output.report.reports Null or Blank");
+			logger.info(this.guid, "output.report.reports Null or Blank");
 			throw new InvalidPayloadException("output.report.reports Null or Blank");
 		}
 	}

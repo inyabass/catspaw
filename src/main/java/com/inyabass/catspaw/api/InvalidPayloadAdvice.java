@@ -14,6 +14,6 @@ public class InvalidPayloadAdvice {
     @ExceptionHandler(InvalidPayloadException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     String InvalidPayloadHandler(InvalidPayloadException ex) {
-        return Util.buildSpringJsonResponse(HttpStatus.BAD_REQUEST.value(), ex.getMessage());
+        return Util.buildSpringJsonResponse(HttpStatus.BAD_REQUEST.value(), ex.getMessage(), null);
     }
 }
