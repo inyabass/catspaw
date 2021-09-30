@@ -2,6 +2,7 @@ package com.inyabass.catspaw.listeners;
 
 import com.inyabass.catspaw.clients.AwsS3Client;
 import com.inyabass.catspaw.clients.KafkaReader;
+import com.inyabass.catspaw.clients.SmtpClient;
 import com.inyabass.catspaw.config.ConfigProperties;
 import com.inyabass.catspaw.config.ConfigReader;
 import com.inyabass.catspaw.data.TestResponseModel;
@@ -88,6 +89,13 @@ public class TestResponder implements Listener {
             testResponseModel = new TestResponseModel(this.inputJson);
         } catch (Throwable t) {
             this.abendMessage(t, "Unable to Parse JSON");
+            return;
+        }
+        //
+        // If flagged as error then Send Notification Email and quit
+        //
+        if(testResponseModel.getStatus().equals(TestResponseModel.STATUS_ERROR)) {
+            this.reportError(testResponseModel);
             return;
         }
         //
@@ -307,6 +315,7 @@ public class TestResponder implements Listener {
         }
         try {
             xferProperties.store(fileOutputStream, "Transfer Properties File");
+            fileOutputStream.close();
         } catch (Throwable t) {
             this.abendMessage(t, "Unable to create Transfer Properties file");
             return;
@@ -399,6 +408,31 @@ public class TestResponder implements Listener {
         //
         // Send notification Email
         //
+        logger.info(this.guid, "Sending Notification Email");
+        String to = testResponseModel.getEmailTo();
+        String subject = "Test Results for job " + this.guid;
+        String body = "<html><head></head><body>";
+        String runStatus = testResponseModel.getStatus();
+        if(!runStatus.equals(TestResponseModel.STATUS_NEW)) {
+            body += "<p align=\"left\">";
+            body += "Job Status was : " + runStatus + "<br>";
+            body += "Status message was : " + testResponseModel.getStatusMessage();
+            body += "</p>";
+        }
+        body += "<p align=\"left\">Test Reports</p>";
+        body += "<p align=\"left\">";
+        for(String webAddress: reportFullUrls) {
+            body += "<a href=\"" + webAddress + "\">" + webAddress + "</a><br>";
+        }
+        body += "</p>";
+        body += "</body></html>";
+        try {
+            Util.sendEmail(to, subject, body);
+        } catch (Throwable t) {
+            this.abendMessage(t, "Unable to Send Notification Email");
+            return;
+        }
+        logger.info(this.guid, "Email Notification Sent Successfully");
         logger.info(this.guid, "End Processing - SUCCESS");
     }
 
@@ -409,6 +443,22 @@ public class TestResponder implements Listener {
         }
         logger.error(this.guid, messageToWrite);
         logger.error(this.guid, "End Processing - ERROR");
+    }
+
+    private void reportError(TestResponseModel testResponseModel) {
+        logger.error(this.guid, "Test Response showed status Error : " + testResponseModel.getStatusMessage());
+        logger.info(this.guid, "Sending Notification Email (Error)");
+        String to = testResponseModel.getEmailTo();
+        String subject = "Test Results for job " + this.guid + " (Failed)";
+        String body = "<html><head></head><body>";
+        body += "<p align=\"left\">Error Message : " + testResponseModel.getStatusMessage() + "</p>";
+        body += "</body></html>";
+        try {
+            Util.sendEmail(to, subject, body);
+        } catch (Throwable t) {
+            this.abendMessage(t, "Unable to Send Notification Email (Error)");
+            return;
+        }
     }
 
     private void writeStdoutFilesToS3(File cloneStdoutFile, File execStdoutFile) throws Throwable {
@@ -465,9 +515,5 @@ public class TestResponder implements Listener {
                 }
             }
         }
-    }
-
-    private void writeReportHTMLToS3() {
-
     }
 }

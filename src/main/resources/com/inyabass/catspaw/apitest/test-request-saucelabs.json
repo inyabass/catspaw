@@ -1,5 +1,5 @@
 {
-  "requestor": "mark",
+  "requestor": "Mark Wilkinson",
   "tagExpression": "@configtest-1",
   "branch": "develop",
   "configurationFile": "src/main/resources/com/inyabass/cats/config/selenium.properties",
@@ -19,9 +19,7 @@
       "teamKey": ""
     },
     "email": {
-      "to": "mark.wilkinson@dotmatics.com",
-      "subject": "Test Results for ",
-      "body": "Test Results"
+      "to": "mark.wilkinson@dotmatics.com"
     }
   }
 }

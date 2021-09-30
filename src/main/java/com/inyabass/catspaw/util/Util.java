@@ -1,6 +1,7 @@
 package com.inyabass.catspaw.util;
 
 import com.inyabass.catspaw.clients.AwsS3Client;
+import com.inyabass.catspaw.clients.SmtpClient;
 import com.inyabass.catspaw.config.ConfigProperties;
 import com.inyabass.catspaw.config.ConfigReader;
 import com.inyabass.catspaw.data.TestRequestModel;
@@ -11,6 +12,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.lang.invoke.MethodHandles;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -320,5 +322,26 @@ public class Util {
             }
         });
         return returnValue;
+    }
+
+    public static String encode(String decoded) {
+        Base64.Encoder encoder = Base64.getEncoder();
+        return new String(encoder.encode(decoded.getBytes()), StandardCharsets.UTF_8);
+    }
+
+    public static String decode(String encoded) {
+        Base64.Decoder decoder = Base64.getDecoder();
+        return new String(decoder.decode(encoded.getBytes()), StandardCharsets.UTF_8);
+    }
+
+    public static void sendEmail(String to, String subject, String body) throws Throwable {
+        String smtpServer = null;
+        smtpServer = ConfigReader.get(ConfigProperties.SMTP_SERVER);
+        int smtpPort = 0;
+        smtpPort = Integer.parseInt(ConfigReader.get(ConfigProperties.SMTP_SERVER_PORT));
+        String smtpFromAddress = null;
+        smtpFromAddress = ConfigReader.get(ConfigProperties.SMTP_FROM_ADDRESS);
+        SmtpClient smtpClient = new SmtpClient(smtpServer, smtpFromAddress, smtpPort);
+        smtpClient.sendSimpleEmail(to, subject, body);
     }
 }

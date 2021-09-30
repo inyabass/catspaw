@@ -20,9 +20,7 @@
       "teamKeys": []
     },
     "email": {
-      "to": "mark.wilkinson@dotmatics.com",
-      "subject": "Test Results for ",
-      "body": "Test Results"
+      "to": "mark.wilkinson@dotmatics.com"
     }
   }
 }

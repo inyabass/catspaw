@@ -72,9 +72,7 @@ public class SmtpClient {
         mimeBodyPart.setContent(body, "text/html");
         Multipart multipart = new MimeMultipart();
         multipart.addBodyPart(mimeBodyPart);
-
         message.setContent(multipart);
-
         Transport.send(message);
     }
 

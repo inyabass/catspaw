@@ -92,7 +92,7 @@ public class TestExecutor implements Listener {
         // Create Test Response Model from Test Request Model
         //
         TestResponseModel testResponseModel = new TestResponseModel(testRequestModel.export());
-        testResponseModel.addStatus("new");
+        testResponseModel.addStatus(TestResponseModel.STATUS_NEW);
         testResponseModel.addStatusMessage("");
         //
         // Figure out working directory and clear it if found or create it if not found
@@ -106,7 +106,7 @@ public class TestExecutor implements Listener {
                 logger.info(this.guid, "Using Random Working Directory: " + workingDirectory);
             }
         } catch (Throwable t) {
-            testResponseModel.setStatus("error");
+            testResponseModel.setStatus(TestResponseModel.STATUS_ERROR);
             testResponseModel.setStatusMessage("Unable to determine working directory: " + t.getMessage());
             this.abendWriteTestResponse(t, "Unable to determine working directory", testResponseModel);
             return;
@@ -121,13 +121,13 @@ public class TestExecutor implements Listener {
             try {
                 scriptProcessor.run();
             } catch (Throwable t) {
-                testResponseModel.setStatus("error");
+                testResponseModel.setStatus(TestResponseModel.STATUS_ERROR);
                 testResponseModel.setStatusMessage("Unable to clear working directory: " + t.getMessage());
                 this.abendWriteTestResponse(t, "Unable to clear working directory", testResponseModel);
                 return;
             }
             if(scriptProcessor.getExitValue()!=0) {
-                testResponseModel.setStatus("error");
+                testResponseModel.setStatus(TestResponseModel.STATUS_ERROR);
                 testResponseModel.setStatusMessage("Unable to clear working directory: " + scriptProcessor.getExitValue());
                 this.abendWriteTestResponse(null, "Unable to clear working directory: " + scriptProcessor.getExitValue(), testResponseModel);
                 return;
@@ -141,7 +141,7 @@ public class TestExecutor implements Listener {
             try {
                 Files.createDirectories(Paths.get(workingDirectoryFull));
             } catch (Throwable t) {
-                testResponseModel.setStatus("error");
+                testResponseModel.setStatus(TestResponseModel.STATUS_ERROR);
                 testResponseModel.setStatusMessage("Unable to create working directory: " + t.getMessage());
                 this.abendWriteTestResponse(t, "Unable to create working directory", testResponseModel);
                 return;
@@ -156,7 +156,7 @@ public class TestExecutor implements Listener {
         try {
             repoUrl = ConfigReader.get(ConfigProperties.GIT_REPO_URL);
         } catch (Throwable t) {
-            testResponseModel.setStatus("error");
+            testResponseModel.setStatus(TestResponseModel.STATUS_ERROR);
             testResponseModel.setStatusMessage("Unable to get Git Repo URL: " + t.getMessage());
             this.abendWriteTestResponse(t, "Unable to get Git Repo URL", testResponseModel);
             return;
@@ -165,7 +165,7 @@ public class TestExecutor implements Listener {
         try {
             cloneToDirectory = ConfigReader.get(ConfigProperties.GIT_CLONE_TO_DIRECTORY);
         } catch (Throwable t) {
-            testResponseModel.setStatus("error");
+            testResponseModel.setStatus(TestResponseModel.STATUS_ERROR);
             testResponseModel.setStatusMessage("Unable to get Clone-to Directory: " + t.getMessage());
             this.abendWriteTestResponse(t, "Unable to get Clone-to Directory", testResponseModel);
             return;
@@ -179,7 +179,7 @@ public class TestExecutor implements Listener {
         try {
             scriptProcessor.addLine("git clone " + repoUrl + " " + cloneToDirectory);
         } catch (Throwable t) {
-            testResponseModel.setStatus("error");
+            testResponseModel.setStatus(TestResponseModel.STATUS_ERROR);
             testResponseModel.setStatusMessage("Unable to build 'git clone' command: " + t.getMessage());
             this.abendWriteTestResponse(t, "Unable to build 'git clone' command", testResponseModel);
             return;
@@ -187,7 +187,7 @@ public class TestExecutor implements Listener {
         try {
             scriptProcessor.addLine("cd " + cloneToDirectory);
         } catch (Throwable t) {
-            testResponseModel.setStatus("error");
+            testResponseModel.setStatus(TestResponseModel.STATUS_ERROR);
             testResponseModel.setStatusMessage("Unable to build Change Directory Command for '" + cloneToDirectory + "': " + t.getMessage());
             this.abendWriteTestResponse(t, "Unable to build Change Directory Command for '" + cloneToDirectory + "'", testResponseModel);
             return;
@@ -203,13 +203,13 @@ public class TestExecutor implements Listener {
         try {
             scriptProcessor.run();
         } catch (Throwable t) {
-            testResponseModel.setStatus("error");
+            testResponseModel.setStatus(TestResponseModel.STATUS_ERROR);
             testResponseModel.setStatusMessage("Could not execute script to clone repo:: " + t.getMessage());
             this.abendWriteTestResponse(t, "Could not execute script to clone repo", testResponseModel);
             return;
         }
         if(scriptProcessor.getExitValue()!=0) {
-            testResponseModel.setStatus("error");
+            testResponseModel.setStatus(TestResponseModel.STATUS_ERROR);
             testResponseModel.setStatusMessage("Non-Zero exit code from script to clone repo: " + scriptProcessor.getExitValue());
             try {
                 this.writeResultsToS3(scriptProcessor.getStdoutFile(), null, null, testResponseModel);
@@ -226,7 +226,7 @@ public class TestExecutor implements Listener {
         String clonedDirectory = workingDirectory + ScriptProcessor.fs + cloneToDirectory;
         String clonedDirectoryFull = workingDirectoryFull + ScriptProcessor.fs + cloneToDirectory;
         if(!Files.exists(Paths.get(clonedDirectoryFull))) {
-            testResponseModel.setStatus("error");
+            testResponseModel.setStatus(TestResponseModel.STATUS_ERROR);
             testResponseModel.setStatusMessage("Clone-to Directory not found - Repo was not cloned successfully");
             try {
                 this.writeResultsToS3(scriptProcessor.getStdoutFile(), null, null, testResponseModel);
@@ -260,7 +260,7 @@ public class TestExecutor implements Listener {
             tagExpression = testRequestModel.getTagExpression();
             logger.info(this.guid, "Using Tag Expression '" + tagExpression + "'");
         } catch (Throwable t) {
-            testResponseModel.setStatus("error");
+            testResponseModel.setStatus(TestResponseModel.STATUS_ERROR);
             testResponseModel.setStatusMessage("Cannot determine tagExpression: " + t.getMessage());
             try {
                 this.writeResultsToS3(cloneStdoutFile, null, null, testResponseModel);
@@ -280,7 +280,7 @@ public class TestExecutor implements Listener {
         try {
             scriptProcessor.run();
         } catch (Throwable t) {
-            testResponseModel.setStatus("error");
+            testResponseModel.setStatus(TestResponseModel.STATUS_ERROR);
             testResponseModel.setStatusMessage("Could not execute script to execute tests: " + t.getMessage());
             try {
                 this.writeResultsToS3(cloneStdoutFile, scriptProcessor.getStdoutFile(), null, testResponseModel);
@@ -291,9 +291,9 @@ public class TestExecutor implements Listener {
             return;
         }
         if(scriptProcessor.getExitValue()!=0) {
-            logger.warn(this.guid, "Non-Zero exit code from script to execute tests: " + scriptProcessor.getExitValue());
-            testResponseModel.setStatus("warn");
-            testResponseModel.setStatusMessage("Non-Zero exit code from script to execute tests: " + scriptProcessor.getExitValue());
+            logger.warn(this.guid, "Tests failed to execute successfully: " + scriptProcessor.getExitValue());
+            testResponseModel.setStatus(TestResponseModel.STATUS_FAILED);
+            testResponseModel.setStatusMessage("Tests failed to execute successfully: " + scriptProcessor.getExitValue());
         }
         logger.info(this.guid, "Test Script Execution Complete");
         if(!this.debug) {
@@ -308,7 +308,7 @@ public class TestExecutor implements Listener {
         try {
             jsonFileLocation = ConfigReader.get(ConfigProperties.JSON_FILE_LOCATION);
         } catch (Throwable t) {
-            testResponseModel.setStatus("error");
+            testResponseModel.setStatus(TestResponseModel.STATUS_ERROR);
             testResponseModel.setStatusMessage("Could not determine output json filename: " + t.getMessage());
             try {
                 this.writeResultsToS3(cloneStdoutFile, execStdoutFile, null, testResponseModel);
@@ -322,7 +322,7 @@ public class TestExecutor implements Listener {
         if(!jsonOutputFile.exists()) {
             logger.warn(this.guid, "Could not find Json Output file: " + clonedDirectoryFull + ScriptProcessor.fs + jsonFileLocation);
             if(testResponseModel.getStatus().equals("new")) {
-                testResponseModel.setStatus("warn");
+                testResponseModel.setStatus(TestResponseModel.STATUS_WARN);
                 testResponseModel.setStatusMessage("Could not find Json Output file: " + jsonFileLocation);
             }
             jsonOutputFile = null;
@@ -330,7 +330,7 @@ public class TestExecutor implements Listener {
         try {
             this.writeResultsToS3(cloneStdoutFile, execStdoutFile, jsonOutputFile, testResponseModel);
         } catch (Throwable t) {
-            testResponseModel.setStatus("error");
+            testResponseModel.setStatus(TestResponseModel.STATUS_ERROR);
             testResponseModel.setStatusMessage("Could not Write Results to S3: " + t.getMessage());
             this.abendWriteTestResponse(t, "Could not Write Results to S3", testResponseModel);
             return;

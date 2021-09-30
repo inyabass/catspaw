@@ -1,6 +1,7 @@
 package com.inyabass.catspaw.config;
 
 import com.inyabass.catspaw.logging.Logger;
+import com.inyabass.catspaw.util.Util;
 import org.junit.Assert;
 
 import java.io.File;
@@ -104,7 +105,7 @@ public class ConfigReader {
         if(ConfigReader.resolveEnvironmentVariables&&System.getenv(property.toUpperCase().replaceAll("\\.", "_"))!=null) {
             String value = System.getenv(property.toUpperCase().replaceAll("\\.", "_"));
             if(value.startsWith("$e:")) {
-                return Resolver.resolve(decode(value.substring(3)));
+                return Resolver.resolve(Util.decode(value.substring(3)));
             } else {
                 return Resolver.resolve(value);
             }
@@ -113,7 +114,7 @@ public class ConfigReader {
         if(ConfigReader.existsInternal(property)) {
             String value = (String) ConfigReader.properties.get(property);
             if(value.startsWith("$e:")) {
-                return Resolver.resolve(decode(value.substring(3)));
+                return Resolver.resolve(Util.decode(value.substring(3)));
             } else {
                 return Resolver.resolve(value);
             }
@@ -132,7 +133,7 @@ public class ConfigReader {
     }
 
     public static void setEncoded(String property, String value) throws Throwable {
-        set(property, "$e:" + encode(value));
+        set(property, "$e:" + Util.encode(value));
     }
 
     public static void mergeInWithOverride(Properties mergeProperties) throws Throwable {
@@ -149,16 +150,6 @@ public class ConfigReader {
         if(ConfigReader.properties == null) {
             ConfigReader.ConfigReader();
         }
-    }
-
-    private static String encode(String decoded) {
-        Base64.Encoder encoder = Base64.getEncoder();
-        return new String(encoder.encode(decoded.getBytes()), StandardCharsets.UTF_8);
-    }
-
-    private static String decode(String encoded) {
-        Base64.Decoder decoder = Base64.getDecoder();
-        return new String(decoder.decode(encoded.getBytes()), StandardCharsets.UTF_8);
     }
 
     public static void setResolveEnvironmentVariables(boolean value) {

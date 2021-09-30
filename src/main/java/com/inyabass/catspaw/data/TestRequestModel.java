@@ -5,6 +5,11 @@ import java.util.List;
 
 public class TestRequestModel extends DataModel {
 
+    public static final String STATUS_NEW = "new";
+    public static final String STATUS_ERROR = "error";
+    public static final String STATUS_WARN = "warn";
+    public static final String STATUS_FAILED = "failed";
+
     private static String GUID_PATH = "guid";
     private static String REQUESTOR_PATH = "requestor";
     private static String TIME_REQUESTED_PATH = "timeRequested";
@@ -17,13 +22,11 @@ public class TestRequestModel extends DataModel {
     private static String OUTPUT_PATH = "output";
     private static String REPORT_PATH = OUTPUT_PATH + ".report";
     private static String REPORTS_PATH = REPORT_PATH + ".reports";
+    private static String EMAIL_PATH = OUTPUT_PATH + ".email";
+    private static String EMAIL_TO_PATH = EMAIL_PATH + ".to";
     // Methods for the below fields to do
     private static String TEAMS_PATH = OUTPUT_PATH + ".teams";
     private static String TEAM_KEYS_PATH = TEAMS_PATH + ".teamKeys";
-    private static String EMAIL_PATH = OUTPUT_PATH + ".email";
-    private static String EMAIL_TO_PATH = EMAIL_PATH + ".to";
-    private static String EMAIL_SUBJECT_PATH = EMAIL_PATH + ".subject";
-    private static String EMAIL_BODY_PATH = EMAIL_PATH + ".body";
 
     public TestRequestModel() {
     }
@@ -102,13 +105,5 @@ public class TestRequestModel extends DataModel {
 
     public String getEmailTo() {
         return this.getString(EMAIL_TO_PATH);
-    }
-
-    public String getEmailSubject() {
-        return this.getString(EMAIL_SUBJECT_PATH);
-    }
-
-    public String getEmailBody() {
-        return this.getString(EMAIL_BODY_PATH);
     }
 }
