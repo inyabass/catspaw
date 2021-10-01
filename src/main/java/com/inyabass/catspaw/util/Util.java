@@ -6,12 +6,14 @@ import com.inyabass.catspaw.config.ConfigProperties;
 import com.inyabass.catspaw.config.ConfigReader;
 import com.inyabass.catspaw.data.TestRequestModel;
 import com.inyabass.catspaw.logging.Logger;
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+import freemarker.template.TemplateExceptionHandler;
+import org.apache.commons.io.FileUtils;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
+import java.io.*;
 import java.lang.invoke.MethodHandles;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -31,8 +33,38 @@ public class Util {
     public final static SimpleDateFormat STANDARD_DATE_FORMAT = new SimpleDateFormat("yyyyMMdd-HH:mm:ss");
     public final static SimpleDateFormat SPRING_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
 
+    private static Configuration freemarkerConfig = null;
+
+    static {
+        freemarkerConfig = new Configuration(Configuration.getVersion());
+        try {
+            freemarkerConfig.setClassLoaderForTemplateLoading(Thread.currentThread().getContextClassLoader(), "/com/inyabass/catspaw/freemarkertemplates");
+        } catch (Throwable throwable) {
+            logger.warn("Unable to initialise Freemarker: " + throwable.getMessage());
+            freemarkerConfig = null;
+        }
+        freemarkerConfig.setDefaultEncoding("UTF-8");
+        freemarkerConfig.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
+        freemarkerConfig.setLogTemplateExceptions(false);
+        freemarkerConfig.setWrapUncheckedExceptions(true);
+        freemarkerConfig.setFallbackOnNullLoopVariable(false);
+    }
+
     public static void main(String[] args) throws Throwable {
-        File unzippedFile = unzipInPlace(new File("src/main/resources/typical.json.zip"));
+        Map<String, Object> parameters = new HashMap<>();
+        List<String> urls = new ArrayList<>();
+        urls.add("url 1");
+        urls.add("url 2");
+        parameters.put("guid", "theguid");
+        parameters.put("timeRequested", "thetimerequested");
+        parameters.put("requestor", "therequestor");
+        parameters.put("status", "thestatus");
+        parameters.put("statusMessage", "thestatusmessage");
+        parameters.put("tagExpression", "thetagexpression");
+        parameters.put("branch", "thebranch");
+        parameters.put("configurationFile", "theconfigurationfile");
+        parameters.put("urls", urls);
+        Util.sendEmailWithTemplate("mark.wilkinson@dotmatics.com", "Test Results for a Job", "email.ftlh", parameters);
         int i = 0;
     }
 
@@ -338,6 +370,33 @@ public class Util {
     public static String decode(String encoded) {
         Base64.Decoder decoder = Base64.getDecoder();
         return new String(decoder.decode(encoded.getBytes()), StandardCharsets.UTF_8);
+    }
+
+    public static String encodeFile(String fileName) throws Throwable {
+        return encode(new String(FileUtils.readFileToString(new File(fileName), "utf-8")));
+    }
+
+    public static void sendEmailWithTemplate(String to, String subject, String templateFileName, Map<String, Object> parameters) throws Throwable {
+        StringWriter stringWriter = new StringWriter(1024);
+        Template template = null;
+        try {
+            template = freemarkerConfig.getTemplate(templateFileName);
+        } catch (Throwable throwable) {
+            logger.warn("Unable to load Freemarker template : " + templateFileName);
+            stringWriter.append(renderMapToHtml(parameters));
+        }
+        template.process(parameters, stringWriter);
+        String result = stringWriter.toString();
+        sendEmail(to, subject, stringWriter.toString());
+    }
+
+    public static String renderMapToHtml(Map<String, Object> map) {
+        Set<String> keys = map.keySet();
+        String output = "";
+        for(String key: keys) {
+           output += key + "=" + map.get(key) + "<br>";
+        }
+        return output;
     }
 
     public static void sendEmail(String to, String subject, String body) throws Throwable {

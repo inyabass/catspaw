@@ -9,6 +9,7 @@ public class TestRequestModel extends DataModel {
     public static final String STATUS_ERROR = "error";
     public static final String STATUS_WARN = "warn";
     public static final String STATUS_FAILED = "failed";
+    public static final String STATUS_SUCCESS = "success";
 
     private static String GUID_PATH = "guid";
     private static String REQUESTOR_PATH = "requestor";

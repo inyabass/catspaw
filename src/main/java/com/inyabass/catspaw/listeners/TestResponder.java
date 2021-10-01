@@ -21,10 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 
 public class TestResponder implements Listener {
 
@@ -409,27 +406,24 @@ public class TestResponder implements Listener {
         // Send notification Email
         //
         logger.info(this.guid, "Sending Notification Email");
-        String to = testResponseModel.getEmailTo();
-        String subject = "Test Results for job " + this.guid;
-        String body = "<html><head></head><body>";
-        String runStatus = testResponseModel.getStatus();
-        if(!runStatus.equals(TestResponseModel.STATUS_NEW)) {
-            body += "<p align=\"left\">";
-            body += "Job Status was : " + runStatus + "<br>";
-            body += "Status message was : " + testResponseModel.getStatusMessage();
-            body += "</p>";
+        if(testResponseModel.getStatus().equals(TestResponseModel.STATUS_NEW)) {
+            testResponseModel.setStatus(TestResponseModel.STATUS_SUCCESS);
+            testResponseModel.setStatusMessage("Tests and Reports Executed Successfully");
         }
-        body += "<p align=\"left\">Test Reports</p>";
-        body += "<p align=\"left\">";
-        for(String webAddress: reportFullUrls) {
-            body += "<a href=\"" + webAddress + "\">" + webAddress + "</a><br>";
-        }
-        body += "</p>";
-        body += "</body></html>";
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("guid", this.guid);
+        parameters.put("timeRequested", testResponseModel.getTimeRequested());
+        parameters.put("requestor", testResponseModel.getRequestor());
+        parameters.put("status", testResponseModel.getStatus());
+        parameters.put("statusMessage", testResponseModel.getStatusMessage());
+        parameters.put("tagExpression", testResponseModel.getTagExpression());
+        parameters.put("branch", testResponseModel.getBranch());
+        parameters.put("configurationFile", testResponseModel.getConfigurationFile());
+        parameters.put("urls", reportFullUrls);
         try {
-            Util.sendEmail(to, subject, body);
+            Util.sendEmailWithTemplate(testResponseModel.getEmailTo(), "Test Results for Job " + this.guid, "email.ftlh", parameters);
         } catch (Throwable t) {
-            this.abendMessage(t, "Unable to Send Notification Email");
+            this.abendMessage(t, "Unable to Send Notification Email : " + t.getMessage());
             return;
         }
         logger.info(this.guid, "Email Notification Sent Successfully");
@@ -450,13 +444,19 @@ public class TestResponder implements Listener {
         logger.info(this.guid, "Sending Notification Email (Error)");
         String to = testResponseModel.getEmailTo();
         String subject = "Test Results for job " + this.guid + " (Failed)";
-        String body = "<html><head></head><body>";
-        body += "<p align=\"left\">Error Message : " + testResponseModel.getStatusMessage() + "</p>";
-        body += "</body></html>";
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("guid", this.guid);
+        parameters.put("timeRequested", testResponseModel.getTimeRequested());
+        parameters.put("requestor", testResponseModel.getRequestor());
+        parameters.put("status", testResponseModel.getStatus());
+        parameters.put("statusMessage", testResponseModel.getStatusMessage());
+        parameters.put("tagExpression", testResponseModel.getTagExpression());
+        parameters.put("branch", testResponseModel.getBranch());
+        parameters.put("configurationFile", testResponseModel.getConfigurationFile());
         try {
-            Util.sendEmail(to, subject, body);
+            Util.sendEmailWithTemplate(to, subject, "emailerror.ftlh", parameters);
         } catch (Throwable t) {
-            this.abendMessage(t, "Unable to Send Notification Email (Error)");
+            this.abendMessage(t, "Unable to Send Notification Email (Error) : " + t.getMessage());
             return;
         }
     }
