@@ -1,5 +1,6 @@
 {
   "requestor": "Mark Wilkinson",
+  "project": "a project",
   "tagExpression": "@configtest-1",
   "branch": "develop",
   "configurationFile": "src/main/resources/com/inyabass/cats/config/selenium.properties",

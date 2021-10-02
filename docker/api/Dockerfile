@@ -6,3 +6,5 @@ COPY runapp.sh /app/
 COPY app.properties /app/
 
 EXPOSE 8080
+
+ENTRYPOINT ["/app/runapp.sh"]

@@ -66,7 +66,7 @@ public class ScriptProcessor {
         Files.createFile(scriptFilePath);
         scriptFilePath.toFile().setExecutable(true);
         FileWriter fileWriter = new FileWriter(scriptFileName);
-        fileWriter.write("#!/usr/bin/env bash" + System.lineSeparator());
+        fileWriter.write("#!/usr/bin/bash" + System.lineSeparator());
         int i = 0;
         for(String string: this.lines) {
             i++;
@@ -99,6 +99,7 @@ public class ScriptProcessor {
             if(Util.isUnix()) {
                 process.waitFor();
             }
+            logger.info("Dropped through waitFor()");
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String outputFileName = Util.getTemp() + "catsrunlog-" + System.currentTimeMillis() + ".log";
             fileWriter = new FileWriter(outputFileName);
@@ -118,7 +119,11 @@ public class ScriptProcessor {
 
     private String getBash(Map<String, String> environment) {
         if(Util.isUnix()) {
-            return System.getenv("SHELL");
+            if(System.getenv("SHELL")!=null) {
+                return System.getenv("SHELL");
+            } else {
+                return "/bin/bash";
+            }
         }
         return "C:\\Program Files\\Git\\bin\\bash";
     }
