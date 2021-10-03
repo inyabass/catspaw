@@ -187,6 +187,7 @@ public class TestExecutor implements Listener {
         try {
             scriptProcessor.addLine("cd " + cloneToDirectory);
         } catch (Throwable t) {
+            t.printStackTrace(System.out);
             testResponseModel.setStatus(TestResponseModel.STATUS_ERROR);
             testResponseModel.setStatusMessage("Unable to build Change Directory Command for '" + cloneToDirectory + "': " + t.getMessage());
             this.abendWriteTestResponse(t, "Unable to build Change Directory Command for '" + cloneToDirectory + "'", testResponseModel);
@@ -204,6 +205,7 @@ public class TestExecutor implements Listener {
         try {
             scriptProcessor.run();
         } catch (Throwable t) {
+            t.printStackTrace(System.out);
             testResponseModel.setStatus(TestResponseModel.STATUS_ERROR);
             testResponseModel.setStatusMessage("Could not execute script to clone and compile repo:: " + t.getMessage());
             this.abendWriteTestResponse(t, "Could not execute script to clone and compile repo", testResponseModel);

@@ -36,7 +36,7 @@ public class Util {
     private static Configuration freemarkerConfig = null;
 
     static {
-        freemarkerConfig = new Configuration(Configuration.getVersion());
+        freemarkerConfig = new Configuration(Configuration.VERSION_2_3_31);
         try {
             freemarkerConfig.setClassLoaderForTemplateLoading(Thread.currentThread().getContextClassLoader(), "/com/inyabass/catspaw/freemarkertemplates");
         } catch (Throwable throwable) {

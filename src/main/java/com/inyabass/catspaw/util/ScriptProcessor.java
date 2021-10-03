@@ -89,12 +89,12 @@ public class ScriptProcessor {
                 Files.createDirectories(dirPath);
             }
         }
+        int waitSeconds = Integer.parseInt(ConfigReader.get(ConfigProperties.PROCESS_WAIT_SECONDS));
         ProcessBuilder processBuilder = new ProcessBuilder();
         processBuilder.redirectErrorStream(true);
         Process process = null;
         Map<String, String> environment = processBuilder.environment();
         try {
-            int waitSeconds = Integer.parseInt(ConfigReader.get(ConfigProperties.PROCESS_WAIT_SECONDS));
             processBuilder.directory(dirPath.toFile());
             processBuilder.command(this.getBash(environment), scriptFileName);
             process = processBuilder.start();
@@ -107,7 +107,7 @@ public class ScriptProcessor {
             fileWriter = new FileWriter(outputFileName);
             String line = null;
             while ((line = reader.readLine()) != null) {
-                logger.debug(line);
+                logger.debug("Data: " + line);
                 fileWriter.write(line + System.lineSeparator());
             }
             fileWriter.close();
@@ -115,6 +115,17 @@ public class ScriptProcessor {
         } catch (Throwable t) {
             logger.error("Unable to run bash: " + t.getMessage());
             Assert.fail("Unable to Run bash");
+        }
+        if(Util.isUnix()) {
+            int counter = 0;
+            while(process.isAlive()&&counter<3) {
+                counter++;
+                process.waitFor(waitSeconds, TimeUnit.SECONDS);
+            }
+            if(process.isAlive()) {
+                this.exitValue = 999;
+                Assert.fail("Process doesn't look like it's going to end cleanly so crashing out");
+            }
         }
         this.exitValue = process.exitValue();
     }
