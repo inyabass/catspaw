@@ -31,6 +31,7 @@ public class ConfigProperties {
 
     // ScriptProcessor
     public static final String SCRIPTPROCESSOR_WORKING_DIRECTORY = "scriptprocessor.working.directory";
+    public static final String PROCESS_WAIT_SECONDS = "process.wait.seconds";
 
     // TestExecutor
     public static final String GIT_REPO_URL = "git.repo.url";

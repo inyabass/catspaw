@@ -1,5 +1,6 @@
 package com.inyabass.catspaw.util;
 
+import com.inyabass.catspaw.config.ConfigProperties;
 import com.inyabass.catspaw.config.ConfigReader;
 import com.inyabass.catspaw.logging.Logger;
 import org.junit.Assert;
@@ -15,6 +16,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class ScriptProcessor {
 
@@ -92,14 +94,14 @@ public class ScriptProcessor {
         Process process = null;
         Map<String, String> environment = processBuilder.environment();
         try {
+            int waitSeconds = Integer.parseInt(ConfigReader.get(ConfigProperties.PROCESS_WAIT_SECONDS));
             processBuilder.directory(dirPath.toFile());
             processBuilder.command(this.getBash(environment), scriptFileName);
             process = processBuilder.start();
             Thread.sleep(250);
             if(Util.isUnix()) {
-                process.waitFor();
+                process.waitFor(waitSeconds, TimeUnit.SECONDS);
             }
-            logger.info("Dropped through waitFor()");
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String outputFileName = Util.getTemp() + "catsrunlog-" + System.currentTimeMillis() + ".log";
             fileWriter = new FileWriter(outputFileName);

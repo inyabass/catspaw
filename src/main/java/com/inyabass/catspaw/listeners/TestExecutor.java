@@ -173,7 +173,7 @@ public class TestExecutor implements Listener {
         //
         // Clone Repository
         //
-        logger.info(this.guid, "Executing script to clone repository");
+        logger.info(this.guid, "Executing script to clone and compile repository");
         ScriptProcessor scriptProcessor = new ScriptProcessor();
         scriptProcessor.setWorkingDirectory(workingDirectory);
         try {
@@ -200,12 +200,13 @@ public class TestExecutor implements Listener {
         } catch (Throwable t) {
             logger.info(this.guid, "Using default branch");
         }
+        scriptProcessor.addLine(MVN_COMMAND + " compile");
         try {
             scriptProcessor.run();
         } catch (Throwable t) {
             testResponseModel.setStatus(TestResponseModel.STATUS_ERROR);
-            testResponseModel.setStatusMessage("Could not execute script to clone repo:: " + t.getMessage());
-            this.abendWriteTestResponse(t, "Could not execute script to clone repo", testResponseModel);
+            testResponseModel.setStatusMessage("Could not execute script to clone and compile repo:: " + t.getMessage());
+            this.abendWriteTestResponse(t, "Could not execute script to clone and compile repo", testResponseModel);
             return;
         }
         if(scriptProcessor.getExitValue()!=0) {
@@ -270,7 +271,6 @@ public class TestExecutor implements Listener {
             this.abendWriteTestResponse(t, "Cannot determine tagExpression", testResponseModel);
             return;
         }
-        scriptProcessor.addLine(MVN_COMMAND + " compile");
         String command = "./runtests.sh \"" + tagExpression + "\"";
         if(configurationFile!=null) {
             command += " " + configurationFile;
@@ -280,6 +280,7 @@ public class TestExecutor implements Listener {
         try {
             scriptProcessor.run();
         } catch (Throwable t) {
+            t.printStackTrace(System.out);
             testResponseModel.setStatus(TestResponseModel.STATUS_ERROR);
             testResponseModel.setStatusMessage("Could not execute script to execute tests: " + t.getMessage());
             try {
