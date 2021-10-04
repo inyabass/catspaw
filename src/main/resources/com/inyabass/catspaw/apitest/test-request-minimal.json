@@ -8,7 +8,7 @@
     {
       "propertiesFile": "selenium.properties",
       "properties": {
-        "ITEM": "was overridden",
+        "LOCALHOST_SERVER": "http://linuxserver.broadband:4444/wd/hub",
         "NEW": "A new Property"
       }
     }
