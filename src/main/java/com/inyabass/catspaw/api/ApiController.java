@@ -62,6 +62,17 @@ public class ApiController {
 			logger.info(this.guid, "requestor Null or Blank");
 			throw new InvalidPayloadException("requestor Null or Blank");
 		}
+		String project = null;
+		try {
+			project = this.testRequestModel.getProject();
+		} catch (Throwable t) {
+			logger.info(this.guid, "project Not Found");
+			throw new InvalidPayloadException("project Not Found");
+		}
+		if(project==null||project.equals("")) {
+			logger.info(this.guid, "project Null or Blank");
+			throw new InvalidPayloadException("project Null or Blank");
+		}
 		String timeRequested = null;
 		try {
 			timeRequested = this.testRequestModel.getTimeRequested();
