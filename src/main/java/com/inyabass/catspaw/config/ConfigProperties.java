@@ -55,4 +55,11 @@ public class ConfigProperties {
     public static final String AWS_ACCESS_KEY = "aws.data.1";
     public static final String AWS_SECRET_KEY = "aws.data.2";
     public static final String AWS_WEB_BASE_URL = "aws.web.base.url";
+
+    // MySql
+    public static final String MYSQL_SERVER = "mysql.server";
+    public static final String MYSQL_PORT = "mysql.port";
+    public static final String MYSQL_USERNAME = "mysql.username";
+    public static final String MYSQL_PASSWORD = "mysql.password";
+    public static final String MYSQL_SCHEMA = "mysql.schema";
 }

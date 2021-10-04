@@ -26,7 +26,7 @@ public class ConfigReader {
     private static boolean resolveEnvironmentVariables = true;
 
     public static void main(String[] args) throws Throwable {
-        String s = get("bootstrap.servers");
+        System.out.println(Util.encode("Motown4607$"));
         int i = 0;
     }
 
