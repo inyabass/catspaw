@@ -2,11 +2,15 @@ package com.inyabass.catspaw.clients;
 
 import com.inyabass.catspaw.config.ConfigProperties;
 import com.inyabass.catspaw.config.ConfigReader;
+import com.inyabass.catspaw.logging.Logger;
 import org.junit.Assert;
 
+import java.lang.invoke.MethodHandles;
 import java.sql.*;
 
 public class MySqlClient {
+
+    private final static Logger logger = new Logger(MethodHandles.lookup().lookupClass());
 
     private Connection connection = null;
     private String schema = null;

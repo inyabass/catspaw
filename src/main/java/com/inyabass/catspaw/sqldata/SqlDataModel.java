@@ -550,8 +550,7 @@ public class SqlDataModel {
                 break;
             }
             case TIMESTAMP_TYPE: {
-                Timestamp timestamp = new Timestamp((Long) value);
-                literal = "'" + timestamp.toString() + "'";
+                literal = "'" + value.toString() + "'";
                 break;
             }
             default: {

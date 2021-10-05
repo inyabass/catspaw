@@ -2,7 +2,9 @@ package com.inyabass.catspaw.api;
 
 import com.inyabass.catspaw.clients.KafkaWriter;
 import com.inyabass.catspaw.config.ConfigProperties;
+import com.inyabass.catspaw.data.JobStatusUpdateModel;
 import com.inyabass.catspaw.data.TestRequestModel;
+import com.inyabass.catspaw.listeners.ListenerHelper;
 import com.inyabass.catspaw.logging.Logger;
 import com.inyabass.catspaw.sqldata.SqlDataModel;
 import com.inyabass.catspaw.util.Util;
@@ -10,6 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.lang.invoke.MethodHandles;
+import java.sql.Timestamp;
+import java.util.Date;
 
 @RestController
 public class ApiController {
@@ -18,6 +22,7 @@ public class ApiController {
 
 	private String body = null;
 	private TestRequestModel testRequestModel = null;
+	private JobStatusUpdateModel jobStatusUpdateModel = null;
 	private KafkaWriter kafkaWriter = new KafkaWriter();
 	private String guid = null;
 
@@ -31,25 +36,62 @@ public class ApiController {
 		return Util.buildSpringJsonResponse(HttpStatus.CREATED.value(), "Created", this.guid);
 	}
 
-	@ResponseStatus(HttpStatus.CREATED)
-	@PostMapping("/jobstatusupdate")
+	@ResponseStatus(HttpStatus.OK)
+	@PostMapping("/jobStatusUpdate")
 	public String postJobStatusUpdate(@RequestBody String body) {
-		logger.info("Status Update", "");
+		logger.info("Status Update", "Starting");
 		this.body = body;
-		this.validateTestRequestBody(this.body);
+		try {
+			this.jobStatusUpdateModel = new JobStatusUpdateModel(body);
+		} catch (Throwable t) {
+			logger.info("Status", "Unable to parse JSON document body");
+			throw new InvalidPayloadException("Unable to parse JSON document body");
+		}
+		try {
+			this.guid = this.jobStatusUpdateModel.getGuid();
+		} catch (Throwable t) {
+			throw new InvalidPayloadException("Unable to get GUID from JSON");
+		}
+		if(this.guid==null||this.guid.equals("")) {
+			logger.info(this.guid, "GUID Null or Blank");
+			throw new InvalidPayloadException("GUID Null or Blank");
+		}
 		logger.info(this.guid, "Job Status Update");
-		return Util.buildSpringJsonResponse(HttpStatus.CREATED.value(), "Created", this.guid);
+		String status = null;
+		try {
+			status = this.jobStatusUpdateModel.getStatus();
+		} catch (Throwable t) {
+			logger.error(this.guid, "Unable to get status from JSON : " + t.getMessage());
+			throw new InvalidPayloadException("Unable to get status from JSON");
+		}
+		if(status==null||status.equals("")) {
+			logger.info(this.guid, "status Null or Blank");
+			throw new InvalidPayloadException("status Null or Blank");
+		}
+		String statusMessage = null;
+		try {
+			statusMessage = this.jobStatusUpdateModel.getStatusMessage();
+		} catch (Throwable t) {
+			logger.error(this.guid, "Unable to get statusMessage from JSON : " + t.getMessage());
+			throw new InvalidPayloadException("Unable to get statusMessage from JSON");
+		}
+		if(statusMessage==null||statusMessage.equals("")) {
+			logger.info(this.guid, "statusMessage Null or Blank");
+			throw new InvalidPayloadException("statusMessage Null or Blank");
+		}
+		ListenerHelper.jobStatusUpdate(logger, this.guid, status, statusMessage);
+		return Util.buildSpringJsonResponse(HttpStatus.OK.value(), "Updated", this.guid);
 	}
 
 	@ResponseStatus(HttpStatus.OK)
 	@GetMapping("/job")
-	public String jobGetRequest(@RequestParam String jobNumber) {
+	public String getJobDetails(@RequestParam String jobNumber) {
 		return "";
 	}
 
 	@ResponseStatus(HttpStatus.OK)
-	@GetMapping("/currentjobs")
-	public String jobGetCurrentRequests() {
+	@GetMapping("/activeJobs")
+	public String getActiveJobs() {
 		return "";
 	}
 
@@ -81,6 +123,17 @@ public class ApiController {
 		if(requestor==null||requestor.equals("")) {
 			logger.info(this.guid, "requestor Null or Blank");
 			throw new InvalidPayloadException("requestor Null or Blank");
+		}
+		String description = null;
+		try {
+			description = this.testRequestModel.getRequestor();
+		} catch (Throwable t) {
+			logger.info(this.guid, "description Not Found");
+			throw new InvalidPayloadException("description Not Found");
+		}
+		if(description==null||description.equals("")) {
+			logger.info(this.guid, "description Null or Blank");
+			throw new InvalidPayloadException("description Null or Blank");
 		}
 		String project = null;
 		try {
@@ -146,21 +199,26 @@ public class ApiController {
 	public void createJobRecord() {
 		SqlDataModel sqlDataModel = null;
 		try {
+			Date date = Util.STANDARD_DATE_FORMAT.parse(this.testRequestModel.getTimeRequested());
+			Timestamp timestamp = new Timestamp(date.getTime());
 			sqlDataModel = new SqlDataModel();
 			sqlDataModel.setString("guid", this.guid);
 			sqlDataModel.setString("requestor", this.testRequestModel.getRequestor());
-			sqlDataModel.setTimeStamp("timeRequested", Long.parseLong(this.testRequestModel.getTimeRequested()));
+			sqlDataModel.setString("description", this.testRequestModel.getDescription());
+			sqlDataModel.setTimeStamp("timeRequested", timestamp);
 			sqlDataModel.setString("project", this.testRequestModel.getProject());
 			sqlDataModel.setString("tagExpression", this.testRequestModel.getTagExpression());
 			sqlDataModel.setString("branch", this.testRequestModel.getBranch());
 			sqlDataModel.setString("configurationFile", this.testRequestModel.getConfigurationFile());
 			sqlDataModel.setString("reports", this.testRequestModel.getReports());
 			sqlDataModel.setString("emailTo", this.testRequestModel.getEmailTo());
-			sqlDataModel.setString("status", "new");
+			sqlDataModel.setString("status", TestRequestModel.STATUS_NEW);
 			sqlDataModel.setString("statusMessage", "");
 			sqlDataModel.insertNew("jobs");
+			logger.info(this.guid, "Created cats.jobs record");
 		} catch (Throwable throwable) {
 			logger.error(this.guid, "Unable to create Job Record : " + throwable.getMessage());
+			throwable.printStackTrace(System.out);
 			return;
 		}
 	}

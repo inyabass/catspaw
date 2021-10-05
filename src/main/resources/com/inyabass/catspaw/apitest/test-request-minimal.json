@@ -1,5 +1,6 @@
 {
   "requestor": "mark",
+  "description": "Some testing",
   "project": "some project",
   "tagExpression": "@browser-1",
   "branch": "develop",

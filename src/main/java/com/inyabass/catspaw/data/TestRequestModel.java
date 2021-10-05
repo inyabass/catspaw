@@ -5,14 +5,18 @@ import java.util.List;
 
 public class TestRequestModel extends DataModel {
 
-    public static final String STATUS_NEW = "new";
-    public static final String STATUS_ERROR = "error";
-    public static final String STATUS_WARN = "warn";
-    public static final String STATUS_FAILED = "failed";
-    public static final String STATUS_SUCCESS = "successrep";
+    public static final String STATUS_NEW = "New";
+    public static final String STATUS_ERROR = "Error";
+    public static final String STATUS_WARN = "Warn";
+    public static final String STATUS_FAILED = "Failed";
+    public static final String STATUS_COMPLETE = "Complete";
+    public static final String STATUS_RUNNING_TESTS = "Running Tests";
+    public static final String STATUS_TESTS_RUN = "Tests Run";
+    public static final String STATUS_RUNNING_REPORTS = "Running Reports";
 
     private static String GUID_PATH = "guid";
     private static String REQUESTOR_PATH = "requestor";
+    private static String DESCRIPTION_PATH = "description";
     private static String TIME_REQUESTED_PATH = "timeRequested";
     private static String PROJECT_PATH = "project";
     private static String TAG_EXPRESSION_PATH = "tagExpression";
@@ -59,6 +63,10 @@ public class TestRequestModel extends DataModel {
 
     public String getRequestor() {
         return this.getString(REQUESTOR_PATH);
+    }
+
+    public String getDescription() {
+        return this.getString(DESCRIPTION_PATH);
     }
 
     public String getTimeRequested() {

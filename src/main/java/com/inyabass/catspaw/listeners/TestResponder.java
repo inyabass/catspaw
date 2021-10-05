@@ -2,7 +2,6 @@ package com.inyabass.catspaw.listeners;
 
 import com.inyabass.catspaw.clients.AwsS3Client;
 import com.inyabass.catspaw.clients.KafkaReader;
-import com.inyabass.catspaw.clients.SmtpClient;
 import com.inyabass.catspaw.config.ConfigProperties;
 import com.inyabass.catspaw.config.ConfigReader;
 import com.inyabass.catspaw.data.TestResponseModel;
@@ -407,7 +406,7 @@ public class TestResponder implements Listener {
         //
         logger.info(this.guid, "Sending Notification Email");
         if(testResponseModel.getStatus().equals(TestResponseModel.STATUS_NEW)) {
-            testResponseModel.setStatus(TestResponseModel.STATUS_SUCCESS);
+            testResponseModel.setStatus(TestResponseModel.STATUS_COMPLETE);
             testResponseModel.setStatusMessage("Tests and Reports Executed Successfully");
         }
         Map<String, Object> parameters = new HashMap<>();
