@@ -9,6 +9,9 @@ public class ConfigProperties {
     public static final String COUCHDB_CONFIG_DB = "couchdb.config.db";
     public static final String COUCHDB_DATA_DB = "couchdb.data.db";
 
+    // API
+    public static final String API_HOST = "api.host";
+
     // Kafka
     public static final String BOOTSTRAP_SERVERS = "bootstrap.servers";
     public static final String KEY_SERIALIZER = "key.serializer";

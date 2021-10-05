@@ -4,6 +4,7 @@ import com.inyabass.catspaw.clients.KafkaWriter;
 import com.inyabass.catspaw.config.ConfigProperties;
 import com.inyabass.catspaw.data.TestRequestModel;
 import com.inyabass.catspaw.logging.Logger;
+import com.inyabass.catspaw.sqldata.SqlDataModel;
 import com.inyabass.catspaw.util.Util;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -31,9 +32,13 @@ public class ApiController {
 	}
 
 	@ResponseStatus(HttpStatus.CREATED)
-	@PostMapping("/job")
-	public String jobUpdateRequest() {
-		return "";
+	@PostMapping("/jobstatusupdate")
+	public String postJobStatusUpdate(@RequestBody String body) {
+		logger.info("Status Update", "");
+		this.body = body;
+		this.validateTestRequestBody(this.body);
+		logger.info(this.guid, "Job Status Update");
+		return Util.buildSpringJsonResponse(HttpStatus.CREATED.value(), "Created", this.guid);
 	}
 
 	@ResponseStatus(HttpStatus.OK)
@@ -134,6 +139,29 @@ public class ApiController {
 		} catch (Throwable t) {
 			logger.info(this.testRequestModel.getGuid(), "Kafka write failed: " + t.getMessage());
 			throw new InvalidPayloadException("Unable to write to Kafka");
+		}
+		this.createJobRecord();
+	}
+
+	public void createJobRecord() {
+		SqlDataModel sqlDataModel = null;
+		try {
+			sqlDataModel = new SqlDataModel();
+			sqlDataModel.setString("guid", this.guid);
+			sqlDataModel.setString("requestor", this.testRequestModel.getRequestor());
+			sqlDataModel.setTimeStamp("timeRequested", Long.parseLong(this.testRequestModel.getTimeRequested()));
+			sqlDataModel.setString("project", this.testRequestModel.getProject());
+			sqlDataModel.setString("tagExpression", this.testRequestModel.getTagExpression());
+			sqlDataModel.setString("branch", this.testRequestModel.getBranch());
+			sqlDataModel.setString("configurationFile", this.testRequestModel.getConfigurationFile());
+			sqlDataModel.setString("reports", this.testRequestModel.getReports());
+			sqlDataModel.setString("emailTo", this.testRequestModel.getEmailTo());
+			sqlDataModel.setString("status", "new");
+			sqlDataModel.setString("statusMessage", "");
+			sqlDataModel.insertNew("jobs");
+		} catch (Throwable throwable) {
+			logger.error(this.guid, "Unable to create Job Record : " + throwable.getMessage());
+			return;
 		}
 	}
 }
