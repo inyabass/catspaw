@@ -1,5 +1,6 @@
 package com.inyabass.catspaw.sqldata;
 
+import com.inyabass.catspaw.clients.MySqlClient;
 import com.inyabass.catspaw.logging.Logger;
 import org.junit.Assert;
 
@@ -21,6 +22,7 @@ public class SqlDataModel {
     private final static int BOOLEAN_TYPE = 3;
     private final static int TIMESTAMP_TYPE = 4;
 
+    private MySqlClient mySqlClient = null;
     private Map<String, Integer> fieldSpecs = null;
     private Map<String, Object> fields = null;
     private List<String> changedFields = null;
@@ -28,8 +30,9 @@ public class SqlDataModel {
     private ResultSet resultSet = null;
     private int rowCount = 0;
 
-    public SqlDataModel() {
+    public SqlDataModel() throws Throwable {
         this.clear();
+        this.mySqlClient = new MySqlClient();
     }
 
     public void clear() {

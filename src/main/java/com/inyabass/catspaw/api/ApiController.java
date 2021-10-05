@@ -6,10 +6,7 @@ import com.inyabass.catspaw.data.TestRequestModel;
 import com.inyabass.catspaw.logging.Logger;
 import com.inyabass.catspaw.util.Util;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.lang.invoke.MethodHandles;
 
@@ -25,15 +22,33 @@ public class ApiController {
 
 	@ResponseStatus(HttpStatus.CREATED)
 	@PostMapping("/request")
-	public String post(@RequestBody String body) {
+	public String postRequest(@RequestBody String body) {
 		logger.info("New Request", "New Request for " + ConfigProperties.TEST_REQUEST_TOPIC);
 		this.body = body;
-		this.validateBody(this.body);
-		this.processBody(this.body);
+		this.validateTestRequestBody(this.body);
+		this.processTestRequestBody(this.body);
 		return Util.buildSpringJsonResponse(HttpStatus.CREATED.value(), "Created", this.guid);
 	}
 
-	private void validateBody(String body) {
+	@ResponseStatus(HttpStatus.CREATED)
+	@PostMapping("/job")
+	public String jobUpdateRequest() {
+		return "";
+	}
+
+	@ResponseStatus(HttpStatus.OK)
+	@GetMapping("/job")
+	public String jobGetRequest(@RequestParam String jobNumber) {
+		return "";
+	}
+
+	@ResponseStatus(HttpStatus.OK)
+	@GetMapping("/currentjobs")
+	public String jobGetCurrentRequests() {
+		return "";
+	}
+
+	private void validateTestRequestBody(String body) {
 		try {
 			this.testRequestModel = new TestRequestModel(body);
 		} catch (Throwable t) {
@@ -113,7 +128,7 @@ public class ApiController {
 		}
 	}
 
-	public void processBody(String body) {
+	public void processTestRequestBody(String body) {
 		try {
 			this.kafkaWriter.write(ConfigProperties.TEST_REQUEST_TOPIC, this.testRequestModel.getGuid(), this.testRequestModel.export());
 		} catch (Throwable t) {
