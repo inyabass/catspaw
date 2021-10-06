@@ -9,7 +9,7 @@
     {
       "propertiesFile": "selenium.properties",
       "properties": {
-        "LOCALHOST_SERVER": "http://localhost:4444/wd/hub"
+        "LOCALHOST_SERVER": "http://linuxserver.broadband:4444/wd/hub"
       }
     }
   ],
