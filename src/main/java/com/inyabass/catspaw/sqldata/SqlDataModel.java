@@ -508,7 +508,7 @@ public class SqlDataModel {
                 sql += "`" + fieldName + "` = " + this.makeLiteralForType(this.fieldSpecs.get(fieldName), this.fields.get(fieldName));
             }
         }
-        sql += ";";
+        sql += " WHERE `" + primaryKey + "` = '" + primaryKeyValue + "';";
         this.mySqlClient.executeNoResult(sql);
     }
 

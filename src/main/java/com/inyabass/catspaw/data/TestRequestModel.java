@@ -13,6 +13,8 @@ public class TestRequestModel extends DataModel {
     public static final String STATUS_RUNNING_TESTS = "Running Tests";
     public static final String STATUS_TESTS_RUN = "Tests Run";
     public static final String STATUS_RUNNING_REPORTS = "Running Reports";
+    public static final String STATUS_CLONING = "Cloning Repository";
+    public static final String STATUS_CLONED = "Repository Cloned";
 
     private static String GUID_PATH = "guid";
     private static String REQUESTOR_PATH = "requestor";

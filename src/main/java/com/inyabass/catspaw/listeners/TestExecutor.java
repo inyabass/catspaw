@@ -36,6 +36,8 @@ public class TestExecutor implements Listener {
     private KafkaWriter kafkaWriter = new KafkaWriter();
     private List<String> tempFiles = new ArrayList<>();
     private static String MVN_COMMAND = "mvn --batch-mode";
+    private String capturedJsonFileName = null;
+    private String capturedStdoutFileName = null;
 
     public TestExecutor() throws Throwable {
         logger.info("TestExecutor starting");
@@ -93,7 +95,15 @@ public class TestExecutor implements Listener {
         //
         TestResponseModel testResponseModel = new TestResponseModel(testRequestModel.export());
         testResponseModel.addStatus(TestResponseModel.STATUS_NEW);
-        testResponseModel.addStatusMessage("");
+        testResponseModel.addStatusMessage("Awaiting being picked up");
+        //
+        // Update cats.jobs status
+        //
+        try {
+            ListenerHelper.jobStatusUpdate(logger, testResponseModel.getGuid(), testResponseModel.getStatus(), testResponseModel.getStatusMessage(), this.capturedJsonFileName, this.capturedStdoutFileName, null);
+        } catch (Throwable t) {
+            logger.warn(this.guid, "Unable to Update cats.jobs table");
+        }
         //
         // Figure out working directory and clear it if found or create it if not found
         //
@@ -171,6 +181,14 @@ public class TestExecutor implements Listener {
             return;
         }
         //
+        // Update cats.jobs status
+        //
+        try {
+            ListenerHelper.jobStatusUpdate(logger, testResponseModel.getGuid(), TestResponseModel.STATUS_CLONING, "Repository being cloned", this.capturedJsonFileName, this.capturedStdoutFileName, null);
+        } catch (Throwable t) {
+            logger.warn(this.guid, "Unable to Update cats.jobs table");
+        }
+        //
         // Clone Repository
         //
         logger.info(this.guid, "Executing script to clone and compile repository");
@@ -241,6 +259,14 @@ public class TestExecutor implements Listener {
         logger.info(this.guid, "Repository Cloned successfully");
         File cloneStdoutFile = scriptProcessor.getStdoutFile();
         //
+        // Update cats.jobs status
+        //
+        try {
+            ListenerHelper.jobStatusUpdate(logger, testResponseModel.getGuid(), TestResponseModel.STATUS_CLONED, "Repository was cloned successfully", this.capturedJsonFileName, this.capturedStdoutFileName, null);
+        } catch (Throwable t) {
+            logger.warn(this.guid, "Unable to Update cats.jobs table");
+        }
+        //
         // Override any parameters in files specified by the Test Request
         //
         logger.info(this.guid, "Overriding any parameters");
@@ -279,6 +305,14 @@ public class TestExecutor implements Listener {
         }
         scriptProcessor.addLine(command);
         logger.info(this.guid, "Executing script to run tests");
+        //
+        // Update cats.jobs status
+        //
+        try {
+            ListenerHelper.jobStatusUpdate(logger, testResponseModel.getGuid(), TestResponseModel.STATUS_RUNNING_TESTS, "Running Tests", this.capturedJsonFileName, this.capturedStdoutFileName, null);
+        } catch (Throwable t) {
+            logger.warn(this.guid, "Unable to Update cats.jobs table");
+        }
         try {
             scriptProcessor.run();
         } catch (Throwable t) {
@@ -297,12 +331,23 @@ public class TestExecutor implements Listener {
             logger.warn(this.guid, "Tests failed to execute successfully: " + scriptProcessor.getExitValue());
             testResponseModel.setStatus(TestResponseModel.STATUS_FAILED);
             testResponseModel.setStatusMessage("Tests failed to execute successfully: " + scriptProcessor.getExitValue());
+        } else {
+            testResponseModel.setStatus(TestResponseModel.STATUS_TESTS_RUN);
+            testResponseModel.setStatusMessage("Tests Executed Successfully");
         }
         logger.info(this.guid, "Test Script Execution Complete");
         if(!this.debug) {
             this.tempFiles.add(scriptProcessor.getStdoutFile().getAbsolutePath());
         }
         File execStdoutFile = scriptProcessor.getStdoutFile();
+        //
+        // Update cats.jobs status
+        //
+        try {
+            ListenerHelper.jobStatusUpdate(logger, testResponseModel.getGuid(), testResponseModel.getStatus(), testResponseModel.getStatusMessage(), this.capturedJsonFileName, this.capturedStdoutFileName, null);
+        } catch (Throwable t) {
+            logger.warn(this.guid, "Unable to Update cats.jobs table");
+        }
         //
         // Capture outout JSON and write to S3
         //
@@ -358,6 +403,14 @@ public class TestExecutor implements Listener {
             messageToWrite += ": " + t.getMessage();
         }
         logger.error(this.guid, messageToWrite);
+        //
+        // Update cats.jobs status
+        //
+        try {
+            ListenerHelper.jobStatusUpdate(logger, this.guid, TestResponseModel.STATUS_ERROR, message, this.capturedJsonFileName, this.capturedStdoutFileName, null);
+        } catch (Throwable t2) {
+            logger.warn(this.guid, "Unable to Update cats.jobs table");
+        }
         logger.error(this.guid, "End Processing - ERROR");
     }
 
@@ -415,6 +468,7 @@ public class TestExecutor implements Listener {
                 logger.error(this.guid, "Unable to zip " + stdListPath.toFile().getName() + " in place");
             }
             testResponseModel.addStdout(S3ZippedStdListFile.getName());
+            this.capturedStdoutFileName = S3ZippedStdListFile.getName();
             try {
                 Util.writeFileToS3(S3ZippedStdListFile, this.guid);
             } catch (Throwable t) {
@@ -463,6 +517,7 @@ public class TestExecutor implements Listener {
                 logger.error(this.guid, "Unable to zip " + jsonPath.toFile().getName() + " in place");
             }
             testResponseModel.addResultJson(S3ZippedJsonFile.getName());
+            this.capturedJsonFileName = S3ZippedJsonFile.getName();
             try {
                 Util.writeFileToS3(S3ZippedJsonFile, this.guid);
             } catch (Throwable t) {

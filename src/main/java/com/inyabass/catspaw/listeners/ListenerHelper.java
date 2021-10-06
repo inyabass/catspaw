@@ -1,46 +1,48 @@
 package com.inyabass.catspaw.listeners;
 
 import com.inyabass.catspaw.api.InvalidPayloadException;
+import com.inyabass.catspaw.config.ConfigProperties;
+import com.inyabass.catspaw.config.ConfigReader;
+import com.inyabass.catspaw.data.JobStatusUpdateModel;
+import com.inyabass.catspaw.data.StandardModel;
 import com.inyabass.catspaw.logging.Logger;
 import com.inyabass.catspaw.sqldata.SqlDataModel;
+import io.restassured.RestAssured;
+import io.restassured.response.Response;
+import io.restassured.specification.RequestSpecification;
+import org.apache.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 
 public class ListenerHelper {
 
-    public static void jobStatusUpdate(Logger logger, String guid, String status, String statusMessage) {
-        logger.info(guid, "Updating status in cats.jobs");
-        SqlDataModel sqlDataModel = null;
-        try {
-            sqlDataModel = new SqlDataModel();
-        } catch (Throwable t) {
-            logger.error(guid, "Unable to get SqlDataModel : " + t.getMessage());
-            throw new InvalidPayloadException("Unable to get SqlDataModel : " + t.getMessage());
+    public final static String JOB_UPDATE_ENDPOINT = "/jobStatusUpdate";
+
+    public static void jobStatusUpdate(Logger logger, String guid, String status, String statusMessage, String resultJson, String stdout, String urls) throws Throwable {
+        logger.info(guid, "Updating cats.jobs table with Status '" + status + "'");
+        JobStatusUpdateModel jobStatusUpdateModel = new JobStatusUpdateModel(StandardModel.JOB_STATUS_UPDATE);
+        jobStatusUpdateModel.setGuid(guid);
+        jobStatusUpdateModel.setStatus(status);
+        jobStatusUpdateModel.setStatusMessage(statusMessage);
+        if(resultJson!=null) {
+            jobStatusUpdateModel.addResultJson(resultJson);
         }
-        try {
-            sqlDataModel.select("select * from cats.jobs where guid = '" + guid + "';");
-        } catch (Throwable t) {
-            logger.error(guid, "Unable to get data from cats.jobs : " + t.getMessage());
-            throw new InvalidPayloadException("Unable to get data from cats.jobs : " + t.getMessage());
+        if(stdout!=null) {
+            jobStatusUpdateModel.addStdout(stdout);
         }
-        int rowCount = 0;
-        try {
-            rowCount = sqlDataModel.getRowCount();
-        } catch (Throwable t) {
-            logger.error(guid, "Unable to get rowcount from cats.jobs : " + t.getMessage());
-            throw new InvalidPayloadException("Unable to get rowcount from cats.jobs : " + t.getMessage());
+        if(urls!=null) {
+            jobStatusUpdateModel.addUrls(urls);
         }
-        if(rowCount==0) {
-            logger.error(guid, "Couldn't find GUID in cats.jobs");
-            throw new InvalidPayloadException("Couldn't find GUID in cats.jobs");
+        String apiHost = ConfigReader.get(ConfigProperties.API_HOST);
+        String apiPath = apiHost + JOB_UPDATE_ENDPOINT;
+        RequestSpecification requestSpecification = RestAssured.given();
+        requestSpecification.header(HttpHeaders.CONTENT_TYPE, "application/json");
+        requestSpecification.header(HttpHeaders.ACCEPT, "application/json");
+        requestSpecification.body(jobStatusUpdateModel.export());
+        Response response = requestSpecification.post(apiPath);
+        if(response.getStatusCode()!= HttpStatus.OK.value()) {
+            logger.error(guid, "Unable to Update cats.jobs table : " + response.getStatusCode());
+        } else {
+            logger.info(guid, "Table cats.jobs successfully updated");
         }
-        try {
-            sqlDataModel.moveFirst();
-            sqlDataModel.setString("status", status);
-            sqlDataModel.setString("statusMessage", statusMessage);
-            sqlDataModel.updateCurrent();
-        } catch (Throwable t) {
-            logger.error(guid, "Unable to update cats.jobs : " + t.getMessage());
-            throw new InvalidPayloadException("Unable to update cats.jobs : " + t.getMessage());
-        }
-        logger.info(guid, "Status Updated to '" + status + "' message '" + statusMessage + "'");
     }
 }

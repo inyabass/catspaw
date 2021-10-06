@@ -79,7 +79,41 @@ public class ApiController {
 			logger.info(this.guid, "statusMessage Null or Blank");
 			throw new InvalidPayloadException("statusMessage Null or Blank");
 		}
-		ListenerHelper.jobStatusUpdate(logger, this.guid, status, statusMessage);
+		logger.info(this.guid, "Updating status in cats.jobs");
+		SqlDataModel sqlDataModel = null;
+		try {
+			sqlDataModel = new SqlDataModel();
+		} catch (Throwable t) {
+			logger.error(this.guid, "Unable to get SqlDataModel : " + t.getMessage());
+			throw new InvalidPayloadException("Unable to get SqlDataModel : " + t.getMessage());
+		}
+		try {
+			sqlDataModel.select("select * from cats.jobs where guid = '" + this.guid + "';");
+		} catch (Throwable t) {
+			logger.error(this.guid, "Unable to get data from cats.jobs : " + t.getMessage());
+			throw new InvalidPayloadException("Unable to get data from cats.jobs : " + t.getMessage());
+		}
+		int rowCount = 0;
+		try {
+			rowCount = sqlDataModel.getRowCount();
+		} catch (Throwable t) {
+			logger.error(this.guid, "Unable to get rowcount from cats.jobs : " + t.getMessage());
+			throw new InvalidPayloadException("Unable to get rowcount from cats.jobs : " + t.getMessage());
+		}
+		if(rowCount==0) {
+			logger.error(this.guid, "Couldn't find GUID in cats.jobs");
+			throw new InvalidPayloadException("Couldn't find GUID in cats.jobs");
+		}
+		try {
+			sqlDataModel.moveFirst();
+			sqlDataModel.setString("status", status);
+			sqlDataModel.setString("statusMessage", statusMessage);
+			sqlDataModel.updateCurrent();
+		} catch (Throwable t) {
+			logger.error(this.guid, "Unable to update cats.jobs : " + t.getMessage());
+			throw new InvalidPayloadException("Unable to update cats.jobs : " + t.getMessage());
+		}
+		logger.info(this.guid, "Status Updated to '" + status + "' message '" + statusMessage + "'");
 		return Util.buildSpringJsonResponse(HttpStatus.OK.value(), "Updated", this.guid);
 	}
 

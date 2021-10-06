@@ -21,6 +21,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class TestResponder implements Listener {
 
@@ -93,6 +94,14 @@ public class TestResponder implements Listener {
         if(testResponseModel.getStatus().equals(TestResponseModel.STATUS_ERROR)) {
             this.reportError(testResponseModel);
             return;
+        }
+        //
+        // Update cats.jobs status
+        //
+        try {
+            ListenerHelper.jobStatusUpdate(logger, testResponseModel.getGuid(), TestResponseModel.STATUS_CLONING, "Cloning Repository for Reporting", null, null, null);
+        } catch (Throwable t) {
+            logger.warn(this.guid, "Unable to Update cats.jobs table");
         }
         //
         // Figure out working directory and clear it if found or create it if not found
@@ -317,6 +326,14 @@ public class TestResponder implements Listener {
             return;
         }
         //
+        // Update cats.jobs status
+        //
+        try {
+            ListenerHelper.jobStatusUpdate(logger, testResponseModel.getGuid(), TestResponseModel.STATUS_RUNNING_REPORTS, "Running Reports", null, null, null);
+        } catch (Throwable t) {
+            logger.warn(this.guid, "Unable to Update cats.jobs table");
+        }
+        //
         // Build and execute Script to Generate Report
         //
         logger.info(this.guid, "Building script to Execute Reports");
@@ -400,6 +417,15 @@ public class TestResponder implements Listener {
                 }
             } catch (Throwable t) {
             }
+        }
+        //
+        // Update cats.jobs status
+        //
+        String urlsString = reportFullUrls.stream().collect(Collectors.joining("|"));
+        try {
+            ListenerHelper.jobStatusUpdate(logger, testResponseModel.getGuid(), TestResponseModel.STATUS_COMPLETE, "Test execution and Reporting Complete", null, null, urlsString);
+        } catch (Throwable t) {
+            logger.warn(this.guid, "Unable to Update cats.jobs table");
         }
         //
         // Send notification Email

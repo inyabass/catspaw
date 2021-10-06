@@ -8,7 +8,8 @@ import java.nio.charset.StandardCharsets;
 
 public enum StandardModel {
 
-    TEST_REQUEST("test-request.json");
+    TEST_REQUEST("test-request.json"),
+    JOB_STATUS_UPDATE("status-update.json");
 
     private String fileName = null;
 
