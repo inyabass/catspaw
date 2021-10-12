@@ -4,6 +4,7 @@ import com.inyabass.catspaw.clients.AwsS3Client;
 import com.inyabass.catspaw.clients.SmtpClient;
 import com.inyabass.catspaw.config.ConfigProperties;
 import com.inyabass.catspaw.config.ConfigReader;
+import com.inyabass.catspaw.config.StaticPaths;
 import com.inyabass.catspaw.data.TestRequestModel;
 import com.inyabass.catspaw.logging.Logger;
 import freemarker.template.Configuration;
@@ -38,7 +39,7 @@ public class Util {
     static {
         freemarkerConfig = new Configuration(Configuration.VERSION_2_3_31);
         try {
-            freemarkerConfig.setClassLoaderForTemplateLoading(Thread.currentThread().getContextClassLoader(), "/com/inyabass/catspaw/freemarkertemplates");
+            freemarkerConfig.setClassLoaderForTemplateLoading(Thread.currentThread().getContextClassLoader(), StaticPaths.FREEMARKER_TEMPLATES);
         } catch (Throwable throwable) {
             logger.warn("Unable to initialise Freemarker: " + throwable.getMessage());
             freemarkerConfig = null;

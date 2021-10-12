@@ -19,6 +19,8 @@
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
+        <project.package>com.inyabass.catspaw</project.package>
+        <project.path>com/inyabass/catspaw</project.path>
         <kafka-clients.version>2.8.0</kafka-clients.version>
         <slf4j-simple.version>1.7.30</slf4j-simple.version>
         <junit.version>4.13</junit.version>

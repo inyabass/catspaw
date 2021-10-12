@@ -16,7 +16,7 @@ public class ConfigReader {
 
     final static Logger logger = new Logger(MethodHandles.lookup().lookupClass());
 
-    public static final String FILE_BASE = "com/inyabass/catspaw/";
+    public static final String FILE_BASE = StaticPaths.PROJECT_RESOURCE_ROOT;
 
     public static final String CATSPAW_CONFIG_ENV_VARIABLE = "CATSPAW_CONFIG";
     public static final String CATSPAW_CONFIG_JVM_PROPERTY = "catspaw.config";
